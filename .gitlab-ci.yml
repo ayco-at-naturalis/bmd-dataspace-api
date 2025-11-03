@@ -1,16 +1,25 @@
-image: eclipse-temurin:25-jdk
+image: maven:3.9.9-eclipse-temurin-25
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
 
 stages:
-  - deploy
+  - docs
+
+cache:
+  key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
+  paths:
+    - .m2/repository
 
 pages:
-  stage: deploy
+  stage: docs
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
-    - ./mvnw javadoc:javadoc
+    - mvn $MAVEN_CLI_OPTS javadoc:javadoc
     - mkdir -p public
     - cp -r target/site/apidocs/* public/
   artifacts:
     paths:
       - public
-  only:
-    - main

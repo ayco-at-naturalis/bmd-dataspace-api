@@ -1,9 +1,8 @@
 image: eclipse-temurin:25-jdk
 
 variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository --enable-native-access=ALL-UNNAMED"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
-  GIT_STRATEGY: fetch   # belt-and-suspenders: ensure checkout happens
 
 stages: [docs]
 
@@ -18,14 +17,9 @@ pages:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   before_script:
     - chmod +x mvnw
-    # --- quick diagnostics ---
-    - echo "PWD=$(pwd)"
-    - ls -la
-    - find . -maxdepth 2 -name pom.xml -print
     - ./mvnw -v
   script:
-    # Explicitly tell Maven which POM to use (even if we're at repo root)
-    - ./mvnw -f pom.xml $MAVEN_CLI_OPTS javadoc:javadoc
+    - ./mvnw $MAVEN_CLI_OPTS javadoc:javadoc
     - mkdir -p public
     - cp -r target/site/apidocs/* public/
   artifacts:

@@ -19,6 +19,7 @@ pages:
     - chmod +x mvnw
     - ./mvnw -v
   script:
+    - cd $CI_PROJECT_DIR
     - ./mvnw $MAVEN_CLI_OPTS javadoc:javadoc
     - mkdir -p public
     - cp -r target/site/apidocs/* public/

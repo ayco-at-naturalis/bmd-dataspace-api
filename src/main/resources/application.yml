@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  mvc:
+    problemdetails:
+      enabled: true
+
+app:
+  fuseki:
+    base-url: ${FUSEKI_DATASET_BASE_URL:http://localhost:3030/bmd}
+    username: ${FUSEKI_USERNAME:}
+    password: ${FUSEKI_PASSWORD:}
+  graph:
+    base-iri: ${GRAPH_BASE_IRI:urn:uuid:}

@@ -1,0 +1,16 @@
+image: eclipse-temurin:25-jdk
+
+stages:
+  - deploy
+
+pages:
+  stage: deploy
+  script:
+    - ./mvnw javadoc:javadoc
+    - mkdir -p public
+    - cp -r target/site/apidocs/* public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

@@ -30,5 +30,5 @@ details to the docs, refer to the [Springdoc OpenAPI documentation](https://spri
 
 ## Javadocs
 
-Javadocs generated as part of the GitLab pipeline. They can be viewed at
-[https://naturalis.gitlab.io/bmd-dataspace-api](https://naturalis.gitlab.io/bmd-dataspace-api)
+Javadocs are generated as part of the GitLab pipeline. They can be viewed at
+[https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api](https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api)

@@ -14,6 +14,6 @@ public class OpenApiConfig {
         .info(new Info()
             .title("BMD Dataspace API")
             .version("0.1.0")
-            .description("REST interface for interacting with the BMD Dataspace`"));
+            .description("REST interface for interacting with the BMD Dataspace"));
   }
 }

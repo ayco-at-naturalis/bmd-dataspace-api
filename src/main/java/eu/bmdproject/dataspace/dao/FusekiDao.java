@@ -1,6 +1,10 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.GraphProperties;
+import org.klojang.check.Check;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StreamUtils;
@@ -12,9 +16,11 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import static org.klojang.check.CommonChecks.notNull;
 
 @Repository
 public class FusekiDao implements ROCrateDao {
@@ -22,14 +28,18 @@ public class FusekiDao implements ROCrateDao {
   private static final String RO_CRATE_FILE = "ro-crate-metadata.json";
   private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(30);
 
+  private static final Logger log = LoggerFactory.getLogger(FusekiDao.class);
+
+
   private final WebClient fusekiClient;
   private final WebClient httpClient;
   private final GraphProperties graphProps;
 
   public FusekiDao(
-      WebClient fusekiClient,
-      WebClient httpClient,
-      GraphProperties graphProps) {
+      @Qualifier("fusekiClient") WebClient fusekiClient,
+      @Qualifier("httpClient") WebClient httpClient,
+      GraphProperties graphProps
+  ) {
     this.fusekiClient = fusekiClient;
     this.httpClient = httpClient;
     this.graphProps = graphProps;
@@ -38,16 +48,13 @@ public class FusekiDao implements ROCrateDao {
   @Override
   public void ingestFromUrl(URI url) {
     byte[] zipBytes = download(url);
-    String jsonld = extractJsonLd(zipBytes)
-        .orElseThrow(() -> new DaoException("RO-Crate missing " + RO_CRATE_FILE + " in ZIP: " + url));
-    // Derive a stable content-addressed ID from the JSON-LD payload
-    String id = sha256Hex(jsonld.getBytes(StandardCharsets.UTF_8));
+    String jsonld = getRoCrateMetadata(zipBytes);
+    Check.that(jsonld)
+        .is(notNull(), () -> new DaoException("RO-Crate missing " + RO_CRATE_FILE + " in ZIP: " + url));
+    String id = UUID.nameUUIDFromBytes(jsonld.getBytes()).toString();
     String graphUri = graphUriFor(id);
-    // PUT JSON-LD to named graph (Graph Store Protocol)
-    putToGraph(graphUri, jsonld, MediaType.valueOf("application/ld+json"));
+    saveGraph(graphUri, jsonld, MediaType.valueOf("application/ld+json"));
   }
-
-  /* -------------------- helpers -------------------- */
 
   private byte[] download(URI url) {
     try {
@@ -62,30 +69,47 @@ public class FusekiDao implements ROCrateDao {
     }
   }
 
-  private Optional<String> extractJsonLd(byte[] zipBytes) {
-    try (ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
-      ZipEntry entry;
-      while ((entry = zin.getNextEntry()) != null) {
-        if (!entry.isDirectory() && entry.getName().endsWith(RO_CRATE_FILE)) {
-          byte[] bytes = StreamUtils.copyToByteArray(zin);
-          return Optional.of(new String(bytes, StandardCharsets.UTF_8));
-        }
-      }
-      return Optional.empty();
-    } catch (IOException e) {
-      throw new DaoException("Failed to read RO-Crate ZIP", e);
-    }
-  }
-
   private String graphUriFor(String id) {
     String base = graphProps.baseIri();
     if (base.endsWith(":") || base.endsWith("/")) {
       return base + id;
     }
-    // Prefer ':' if base looks like a URN; otherwise '/'
     return base + (base.startsWith("urn:") ? ":" : "/") + id;
   }
 
+  private void saveGraph(String graphUri, String body, MediaType contentType) {
+    String path = "/data"; // dataset already in base-url
+    try {
+      log.debug("Saving ro-crate-metadata.json to triple store. Graph URI: {}", graphUri);
+      fusekiClient.put()
+          .uri(b -> b.path(path).queryParam("graph", graphUri).build())
+          .contentType(contentType)
+          .bodyValue(body)
+          .retrieve()
+          .bodyToMono(Void.class)
+          .timeout(HTTP_TIMEOUT)
+          .block();
+    } catch (Exception e) {
+      throw new DaoException("Failed to upsert graph " + graphUri, e);
+    }
+  }
+
+  private static String getRoCrateMetadata(byte[] zipBytes) {
+    try (ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+      ZipEntry entry;
+      while ((entry = zin.getNextEntry()) != null) {
+        if (!entry.isDirectory() && entry.getName().endsWith(RO_CRATE_FILE)) {
+          byte[] bytes = StreamUtils.copyToByteArray(zin);
+          return new String(bytes, StandardCharsets.UTF_8);
+        }
+      }
+      return null;
+    } catch (IOException e) {
+      throw new DaoException("Failed to read RO-Crate zip file", e);
+    }
+  }
+
+  @SuppressWarnings({"unused"}) // might want to use it for duplicate detection
   private static String sha256Hex(byte[] data) {
     try {
       MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -100,23 +124,4 @@ public class FusekiDao implements ROCrateDao {
     }
   }
 
-  private void putToGraph(String graphUri, String body, MediaType contentType) {
-    // Since baseUrl already points at the dataset, use the Graph Store Protocol endpoint /data
-    String path = "/data";
-    try {
-      fusekiClient.put()
-          .uri(uriBuilder -> uriBuilder
-              .path(path)
-              .queryParam("graph", graphUri)
-              .build())
-          .contentType(contentType)
-          .bodyValue(body)
-          .retrieve()
-          .bodyToMono(Void.class)
-          .timeout(HTTP_TIMEOUT)
-          .block();
-    } catch (Exception e) {
-      throw new DaoException("Failed to upsert graph " + graphUri, e);
-    }
-  }
 }

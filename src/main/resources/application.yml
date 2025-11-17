@@ -8,7 +8,7 @@ spring:
 
 app:
   fuseki:
-    base-url: ${FUSEKI_DATASET_BASE_URL:?}  # e.g. http://localhost:3030/rocrate (dataset included)
+    base-url: ${FUSEKI_DATASET_BASE_URL:?}  # e.g. http://localhost:3030/rocrate
     username: ${FUSEKI_USERNAME:}
     password: ${FUSEKI_PASSWORD:}
   graph:

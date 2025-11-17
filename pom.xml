@@ -11,8 +11,8 @@
   <description>Spring Boot service for ingesting RO-Crates into Fuseki and proxying SPARQL</description>
 
   <properties>
-    <java.version>25</java.version>
-    <maven.compiler.release>25</maven.compiler.release>
+    <java.version>24</java.version>
+    <maven.compiler.release>24</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- ==================================================================== -->

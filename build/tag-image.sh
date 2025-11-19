@@ -9,12 +9,12 @@ if [[ "${GITLAB_PIPELINE}" ]]; then
   BASE_DIR="${CI_PROJECT_DIR}"
 else
   BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  if [[ ! -f "${BASE_DIR}/docker/build.env" ]]; then
+  if [[ ! -f "${BASE_DIR}/build/build.env" ]]; then
     echo 'Local builds require presence of build.env'
     echo 'Copy build.env.template to build.env and modify as appropriate'
     exit 1
   fi
-  source "${BASE_DIR}/docker/build.env"
+  source "${BASE_DIR}/build/build.env"
   CI_COMMIT_REF_SLUG="$(git rev-parse --abbrev-ref HEAD)"
   CI_COMMIT_SHA="$(git log -n 1 --pretty=format:'%H')"
   CI_COMMIT_SHORT_SHA="$(git log -n 1 --pretty=format:'%h')"

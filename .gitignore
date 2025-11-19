@@ -7,11 +7,10 @@
 *.env
 *.iml
 
+/public/
 /target/
-
-/docker/dependencies/
-/docker/mvn-repo/
-
+/build/dependencies/
+/build/mvn-repo/
 /ansible/mount/
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/
@@ -19,4 +18,3 @@
 /ansible/roles/docker-compose/
 /ansible/secrets/
 /ansible/.vagrant/
-

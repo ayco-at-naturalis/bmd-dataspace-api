@@ -60,7 +60,7 @@ secret_detection:
 maven_build:
   stage: "Maven Build"
   script:
-    - ( cd docker ; ./mvn-install.sh )
+    - docker/mvn-install.sh
   artifacts:
     expire_in: 3 days
     paths:

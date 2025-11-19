@@ -2,8 +2,10 @@
 
 # Utility script for doing local builds.
 
+set -e
+
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-"${BASE_DIR}/docker/mvn-install.sh"
-"${BASE_DIR}/docker/create-image.sh"
-"${BASE_DIR}/docker/tag-image.sh"
+"${BASE_DIR}/build/mvn-install.sh"
+"${BASE_DIR}/build/create-image.sh"
+"${BASE_DIR}/build/tag-image.sh"

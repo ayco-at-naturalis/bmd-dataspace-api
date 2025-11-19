@@ -184,7 +184,7 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <configuration>
                     <outputDirectory>
-                        docker/dependencies
+                        build/dependencies
                     </outputDirectory>
                     <includeScope>compile</includeScope>
                 </configuration>

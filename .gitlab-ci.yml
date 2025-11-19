@@ -1,22 +1,63 @@
 image: eclipse-temurin:25-jdk
 
 variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
-  MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
+  SERVICE_NAME: bmd
+  SERVICE_DOMAIN: bii
+  VAULT_AUTH_ROLE: jwt-${SERVICE_NAME}
+  VAULT_SERVER_URL: https://vault.naturalis.io
+  VAULT_PATH: ${SERVICE_DOMAIN}/${SERVICE_NAME}
+  TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
+  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
 
-stages: [docs]
+.job_id_tokens: &job_id_tokens
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://${CI_SERVER_HOST}
+
+stages:
+  - "Secret Detection"
+  - "Publish Javadocs"
 
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
   paths:
     - .m2/repository
 
-pages:
-  stage: docs
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+secret_detection:
+  extends: .secret-analyzer
+  stage: "Secret Detection"
+  variables:
+    SECRET_DETECTION_HISTORIC_SCAN: "false"
+    SECRET_DETECTION_REPORT_FILE: "gl-secret-detection-report.json"
+  artifacts:
+    reports:
+      secret_detection: $SECRET_DETECTION_REPORT_FILE
+    expire_in: 7 days
+  allow_failure: false
   before_script:
-    - chmod +x mvnw
+    - apk add --no-cache jq
+  script:
+    - /analyzer run
+    - |
+      if [ -f "$SECRET_DETECTION_REPORT_FILE" ]; then
+        if [ "$(jq ".vulnerabilities | length" $SECRET_DETECTION_REPORT_FILE)" -gt 0 ]; then
+          echo "Vulnerabilities detected!"
+          echo "Please check the $SECRET_DETECTION_REPORT_FILE security file."
+          echo "Or run gitleak locally on your repository."
+          exit 1
+        fi
+      else
+        echo "Artifact $SECRET_DETECTION_REPORT_FILE does not exist."
+        echo "No evaluation can be performed."
+      fi
+
+
+pages:
+  stage: "Publish Javadocs"
+  before_script:
     - ./mvnw -v
   script:
     - ./mvnw $MAVEN_CLI_OPTS javadoc:javadoc

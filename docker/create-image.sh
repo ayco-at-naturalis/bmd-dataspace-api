@@ -15,9 +15,7 @@ else
     exit 1
   fi
   source "${BASE_DIR}/docker/build.env"
-  CI_COMMIT_REF_SLUG="$(git rev-parse --abbrev-ref HEAD)"
   CI_COMMIT_SHA="$(git log -n 1 --pretty=format:'%H')"
-  CI_COMMIT_SHORT_SHA="$(git log -n 1 --pretty=format:'%h')"
 fi
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""

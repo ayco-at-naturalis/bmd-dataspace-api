@@ -7,6 +7,8 @@ variables:
   VAULT_SERVER_URL: https://vault.naturalis.io
   VAULT_PATH: ${SERVICE_DOMAIN}/${SERVICE_NAME}
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
+  MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
+  MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
   APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
 
 .job_id_tokens: &job_id_tokens
@@ -21,7 +23,7 @@ stages:
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
   paths:
-    - .m2/repository
+    - docker/mvn-repo
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
@@ -62,7 +64,7 @@ publish_javadocs:
     - ./mvnw -v
   script:
     - set -e
-    - ./mvnw --settings './docker/maven-settings.xml' --no-transfer-progress javadoc:javadoc
+    - ./mvnw ${MAVEN_CLI_OPTS} javadoc:javadoc
     - mkdir -p public
     - cp -r target/site/apidocs/* public/
     - "echo Javadocs published successfully! See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/"

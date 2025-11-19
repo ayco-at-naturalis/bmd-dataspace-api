@@ -23,7 +23,7 @@ rm -rf "${BASE_DIR}/docker/dependencies"
 mkdir "${BASE_DIR}/docker/dependencies"
 
 echo '---> Starting build'
-if "${BASE_DIR}/mvnw" clean install --settings "${BASE_DIR}/docker/maven-settings.xml" "--file=${BASE_DIR}/pom.xml";
+if "${BASE_DIR}/mvnw" clean install  --no-transfer-progress --settings "${BASE_DIR}/docker/maven-settings.xml" "--file=${BASE_DIR}/pom.xml";
 then
   echo '---> Maven build completed successfully'
   exit 0

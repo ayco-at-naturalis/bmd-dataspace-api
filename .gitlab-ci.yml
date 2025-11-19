@@ -62,7 +62,7 @@ publish_javadocs:
     - ./mvnw -v
   script:
     - set -e
-    - ./mvnw -settings './docker/maven-settings.xml' javadoc:javadoc
+    - ./mvnw -settings './docker/maven-settings.xml' --no-transfer-progress javadoc:javadoc
     - mkdir -p public
     - cp -r target/site/apidocs/* public/
     - "echo Javadocs published successfully! See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/"

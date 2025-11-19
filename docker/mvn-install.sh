@@ -23,7 +23,9 @@ rm -rf "${BASE_DIR}/docker/dependencies"
 mkdir "${BASE_DIR}/docker/dependencies"
 
 echo '---> Starting build'
-if "${BASE_DIR}/mvnw" clean install  --no-transfer-progress --settings "${BASE_DIR}/docker/maven-settings.xml" "--file=${BASE_DIR}/pom.xml";
+MAVEN_OPTS="\"-Dmaven.repo.local=${BASE_DIR}/docker/mvn-repo\" --enable-native-access=ALL-UNNAMED"
+MAVEN_CLI_OPTS="-B -V --no-transfer-progress \"--file=${BASE_DIR}/pom.xml\""
+if "${BASE_DIR}/mvnw" clean install ${MAVEN_CLI_OPTS};
 then
   echo '---> Maven build completed successfully'
   exit 0

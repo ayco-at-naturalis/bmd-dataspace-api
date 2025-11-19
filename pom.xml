@@ -195,6 +195,9 @@
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
+                        <configuration>
+                            <silent>true</silent>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>copy-artifact</id>

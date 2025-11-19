@@ -18,6 +18,7 @@ variables:
 
 stages:
   - "Secret Detection"
+  - "Maven Build"
   - "Publish Javadocs"
 
 cache:
@@ -56,6 +57,14 @@ secret_detection:
         echo "No evaluation can be performed."
       fi
 
+maven_build:
+  stage: "Maven Build"
+  script:
+    - ( cd docker ; ./mvn-install.sh )
+  artifacts:
+    expire_in: 3 days
+    paths:
+      - docker/dependencies
 
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/

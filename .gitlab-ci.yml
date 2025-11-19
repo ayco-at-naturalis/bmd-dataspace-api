@@ -60,23 +60,17 @@ secret_detection:
 maven_build:
   stage: "Maven Build"
   script:
-    - docker/mvn-install.sh
+    - build/mvn-install.sh
   artifacts:
     expire_in: 3 days
     paths:
-      - docker/dependencies
+      - build/dependencies
 
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
   stage: "Publish Javadocs"
-  before_script:
-    - ./mvnw -v
   script:
-    - set -e
-    - ./mvnw ${MAVEN_CLI_OPTS} javadoc:javadoc
-    - mkdir -p public
-    - cp -r target/site/apidocs/* public/
-    - "echo Javadocs published successfully! See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/"
+    - build/publish-javadocs.sh
   artifacts:
     paths:
       - public

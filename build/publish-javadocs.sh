@@ -21,4 +21,6 @@ mkdir "${BASE_DIR}/public"
 
 "${BASE_DIR}/mvnw" ${MAVEN_CLI_OPTS} javadoc:javadoc
 
-cp -r "${BASE_DIR}/target/site/apidocs/*" "${BASE_DIR}/public/"
+cp -r "${BASE_DIR}/target/site/apidocs/"* "${BASE_DIR}/public/"
+
+echo 'Javadocs published successfully! See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/'

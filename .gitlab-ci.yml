@@ -73,7 +73,8 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - create-image.sh
+    - pwd
+#    - create-image.sh
 
 
 publish_javadocs:

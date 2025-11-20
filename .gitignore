@@ -11,6 +11,8 @@
 /target/
 /build/dependencies/
 /build/mvn-repo/
+/build/kaniko/
+
 /ansible/mount/
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/

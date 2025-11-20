@@ -9,7 +9,7 @@ variables:
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
   MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
-  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens
   id_tokens:
@@ -19,6 +19,7 @@ variables:
 stages:
   - "Secret Detection"
   - "Maven Build"
+  - "Create Image"
   - "Publish Javadocs"
 
 cache:
@@ -65,6 +66,16 @@ maven_build:
     expire_in: 3 days
     paths:
       - build/dependencies
+
+create_image:
+  stage: "Create Image"
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - build/create-image.sh
+
 
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/

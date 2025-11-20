@@ -20,24 +20,38 @@ fi
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 
-image_url="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
-echo "---> Image URL: ${image_url}"
+APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+KANIKO_CONFIG="{ \"auths\": { \"${CI_REGISTRY}\": { \"username\": \"${CI_REGISTRY_USER}\", \"password\": \"${CI_REGISTRY_PASSWORD}\" }}}"
 
-echo '---> Deleting older version of image (if present)'
-docker image rm --force ${image_url} &> /dev/null
+if [[ "${GITLAB_PIPELINE}" ]]; then
+  mkdir -p /kaniko/.docker
+  echo "${KANIKO_CONFIG}" >> /kaniko/.docker/config.json
+  /kaniko/executor \
+    --context "${BASE_DIR}" \
+    --dockerfile "${BASE_DIR}/build/Dockerfile" \
+    --destination "${APP_IMAGE}" \
+    --custom-platform linux/amd64 \
+    --cache=true \
+    --cache-repo=${CI_REGISTRY_IMAGE}/cache
 
-echo '---> Creating image'
-docker build \
-      --no-cache \
-      --pull \
-      --tag "${image_url}" \
-      -f "${BASE_DIR}/build/Dockerfile" \
-      "${BASE_DIR}/build"
+else
+  # NB The kaniko directory is a git-ignored directory
+  rm -rf "${BASE_DIR}/build/kaniko"
+  mkdir -p "${BASE_DIR}/build/kaniko/.docker"
+  echo "${KANIKO_CONFIG}" >> "${BASE_DIR}/build/kaniko/.docker/config.json"
+  docker run --rm \
+    -v "${BASE_DIR}/build:/workspace" \
+    -v "${BASE_DIR}/build/kaniko/.docker:/kaniko/.docker" \
+    gcr.io/kaniko-project/executor:debug \
+      --context /workspace \
+      --dockerfile "/workspace/Dockerfile" \
+      --destination "${APP_IMAGE}" \
+      --custom-platform linux/amd64 \
+      --cache=true \
+      --cache-repo=${CI_REGISTRY_IMAGE}/cache
+  rm -rf "${BASE_DIR}/build/kaniko"
+fi
 
-echo '---> Authenticating with GitLab container registry'
-echo -n ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
-
-echo '---> Pushing image to container registry'
-docker push "${image_url}"
-
+echo
 echo '---> Image created and pushed'
+echo

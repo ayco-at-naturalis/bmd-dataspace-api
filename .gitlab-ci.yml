@@ -73,15 +73,14 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - pwd
-#    - create-image.sh
+    - (cd build && create-image.sh)
 
 
-publish_javadocs:
-  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
-  stage: "Publish Javadocs"
-  script:
-    - build/publish-javadocs.sh
-  artifacts:
-    paths:
-      - public
+#publish_javadocs:
+#  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
+#  stage: "Publish Javadocs"
+#  script:
+#    - build/publish-javadocs.sh
+#  artifacts:
+#    paths:
+#      - public

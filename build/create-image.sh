@@ -40,11 +40,11 @@ else
   mkdir -p "${BASE_DIR}/build/kaniko/.docker"
   echo "${KANIKO_CONFIG}" >> "${BASE_DIR}/build/kaniko/.docker/config.json"
   docker run --rm \
-    -v "${BASE_DIR}/build:/workspace" \
+    -v "${BASE_DIR}:/workspace" \
     -v "${BASE_DIR}/build/kaniko/.docker:/kaniko/.docker" \
     gcr.io/kaniko-project/executor:debug \
       --context /workspace \
-      --dockerfile "/workspace/Dockerfile" \
+      --dockerfile "/workspace/build/Dockerfile" \
       --destination "${APP_IMAGE}" \
       --custom-platform linux/amd64 \
       --cache=true \

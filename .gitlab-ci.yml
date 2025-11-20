@@ -73,7 +73,6 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - mkdir -p /kaniko/.docker
     - build/create-image.sh
 
 

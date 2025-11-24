@@ -80,7 +80,7 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - $CI_PROJECT_DIR/build/create-image.sh
+    - build/create-image.sh
 
 trivy_scan:
   stage: "Trivy Scan"
@@ -123,7 +123,7 @@ tag_docker_image:
   services:
     - docker:${DIND_VERSION}-dind
   script:
-    - docker/tag-docker-image.sh
+    - build/tag-docker-image.sh
 
 
 publish_javadocs:

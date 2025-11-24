@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# NB we cannot use bash because the Kaniko container does not support it.
+
 set -eu
 
 # Are we running inside a GitLab pipeline? Then we have CI_JOB_ID in our env.

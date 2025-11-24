@@ -1,6 +1,9 @@
 image: eclipse-temurin:25-jdk
 
 variables:
+  # Version of docker-dind and docker-cli-extras image
+  DIND_VERSION: 28.4.0
+  # HC Vault
   SERVICE_NAME: bmd
   SERVICE_DOMAIN: bii
   VAULT_AUTH_ROLE: jwt-${SERVICE_NAME}
@@ -9,6 +12,7 @@ variables:
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
   MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
+  # Commit-based origin image
   APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens
@@ -20,6 +24,9 @@ stages:
   - "Secret Detection"
   - "Maven Build"
   - "Create Image"
+  - "Trivy Scan"
+  - "Tag Image"
+  - "Deploy"
   - "Publish Javadocs"
 
 cache:
@@ -74,6 +81,49 @@ create_image:
     entrypoint: [""]
   script:
     - $CI_PROJECT_DIR/build/create-image.sh
+
+trivy_scan:
+  stage: "Trivy Scan"
+  image:
+    name: docker.io/aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    TRIVY_CACHE_DIR: ".trivy"
+  before_script:
+    - "wget --header \"PRIVATE-TOKEN: $TRIVYIGNORE_ACCESS_TOKEN\" \"https://gitlab.com/api/v4/projects/41791412/repository/files/trivyignore/raw?ref=main\" --output-document=.trivyignore || true"
+    - trivy --version
+    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --download-db-only --db-repository "$TRIVY_DB_REPOSITORY"
+  script:
+    # GitLab-compatible report
+    - >
+      trivy image --cache-dir "$TRIVY_CACHE_DIR" --no-progress
+      --username "$CI_REGISTRY_USER" --password "$CI_JOB_TOKEN"
+      --scanners vuln
+      --format template --template "@/contrib/gitlab.tpl"
+      -o gl-container-scanning-report.json
+      "${APP_IMAGE}"
+    # Hard-fail on HIGH/CRITICAL (after writing the report)
+    - >
+      trivy image --cache-dir "$TRIVY_CACHE_DIR" --no-progress
+      --username "$CI_REGISTRY_USER" --password "$CI_JOB_TOKEN"
+      --ignore-unfixed --exit-code 1 --severity HIGH,CRITICAL
+      "${APP_IMAGE}"
+  artifacts:
+    when: always
+    reports:
+      container_scanning: gl-container-scanning-report.json
+    paths:
+      - gl-container-scanning-report.json
+      - .trivy/
+    expire_in: 7 days
+
+tag_docker_image:
+  stage: "Tag Image"
+  image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
+  services:
+    - docker:${DIND_VERSION}-dind
+  script:
+    - docker/tag-docker-image.sh
 
 
 publish_javadocs:

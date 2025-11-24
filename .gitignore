@@ -1,4 +1,22 @@
-/*.env
-/*.env.*
+/.classpath
+/.project
+/.dbeaver/
+/.settings/
+/.idea/
 
-/*.iml
+*.env
+*.iml
+
+/public/
+/target/
+/build/dependencies/
+/build/mvn-repo/
+/build/kaniko/
+
+/ansible/mount/
+/ansible/inventory/group_vars/
+/ansible/inventory/host_vars/
+/ansible/roles/nickjj.docker/
+/ansible/roles/docker-compose/
+/ansible/secrets/
+/ansible/.vagrant/

@@ -1,27 +1,86 @@
 image: eclipse-temurin:25-jdk
 
 variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  SERVICE_NAME: bmd
+  SERVICE_DOMAIN: bii
+  VAULT_AUTH_ROLE: jwt-${SERVICE_NAME}
+  VAULT_SERVER_URL: https://vault.naturalis.io
+  VAULT_PATH: ${SERVICE_DOMAIN}/${SERVICE_NAME}
+  TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
+  MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
+  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
-stages: [docs]
+.job_id_tokens: &job_id_tokens
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://${CI_SERVER_HOST}
+
+stages:
+  - "Secret Detection"
+  - "Maven Build"
+  - "Create Image"
+  - "Publish Javadocs"
 
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
   paths:
-    - .m2/repository
+    - docker/mvn-repo
 
-pages:
-  stage: docs
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+secret_detection:
+  extends: .secret-analyzer
+  stage: "Secret Detection"
+  variables:
+    SECRET_DETECTION_HISTORIC_SCAN: "false"
+    SECRET_DETECTION_REPORT_FILE: "gl-secret-detection-report.json"
+  artifacts:
+    reports:
+      secret_detection: $SECRET_DETECTION_REPORT_FILE
+    expire_in: 7 days
+  allow_failure: false
   before_script:
-    - chmod +x mvnw
-    - ./mvnw -v
+    - apk add --no-cache jq
   script:
-    - ./mvnw $MAVEN_CLI_OPTS javadoc:javadoc
-    - mkdir -p public
-    - cp -r target/site/apidocs/* public/
+    - /analyzer run
+    - |
+      if [ -f "$SECRET_DETECTION_REPORT_FILE" ]; then
+        if [ "$(jq ".vulnerabilities | length" $SECRET_DETECTION_REPORT_FILE)" -gt 0 ]; then
+          echo "Vulnerabilities detected!"
+          echo "Please check the $SECRET_DETECTION_REPORT_FILE security file."
+          echo "Or run gitleak locally on your repository."
+          exit 1
+        fi
+      else
+        echo "Artifact $SECRET_DETECTION_REPORT_FILE does not exist."
+        echo "No evaluation can be performed."
+      fi
+
+maven_build:
+  stage: "Maven Build"
+  script:
+    - build/mvn-install.sh
+  artifacts:
+    expire_in: 3 days
+    paths:
+      - build/dependencies
+
+create_image:
+  stage: "Create Image"
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - $CI_PROJECT_DIR/build/create-image.sh
+
+
+publish_javadocs:
+  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
+  stage: "Publish Javadocs"
+  script:
+    - build/publish-javadocs.sh
   artifacts:
     paths:
       - public

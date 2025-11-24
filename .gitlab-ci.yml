@@ -73,18 +73,14 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    # Debug like hell:
-    - echo $CI_PROJECT_DIR
-    - ls -la $CI_PROJECT_DIR
-    - ls -la $CI_PROJECT_DIR/build
     - $CI_PROJECT_DIR/build/create-image.sh
 
 
-#publish_javadocs:
-#  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
-#  stage: "Publish Javadocs"
-#  script:
-#    - build/publish-javadocs.sh
-#  artifacts:
-#    paths:
-#      - public
+publish_javadocs:
+  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
+  stage: "Publish Javadocs"
+  script:
+    - build/publish-javadocs.sh
+  artifacts:
+    paths:
+      - public

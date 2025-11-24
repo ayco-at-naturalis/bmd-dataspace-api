@@ -73,7 +73,9 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - (cd build && create-image.sh)
+    - echo $CI_PROJECT_DIR
+    - ls -la $CI_PROJECT_DIR
+    - $CI_PROJECT_DIR/build/create-image.sh
 
 
 #publish_javadocs:

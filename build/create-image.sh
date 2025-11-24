@@ -24,11 +24,13 @@ APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 KANIKO_CONFIG="{ \"auths\": { \"${CI_REGISTRY}\": { \"username\": \"${CI_REGISTRY_USER}\", \"password\": \"${CI_REGISTRY_PASSWORD}\" }}}"
 
 if [[ "${GITLAB_PIPELINE}" ]]; then
+  echo '-----------------------------------------------------------------------'
+  pwd
+  echo '-----------------------------------------------------------------------'
   mkdir -p /kaniko/.docker
   echo "${KANIKO_CONFIG}" >> /kaniko/.docker/config.json
   /kaniko/executor \
     --context "${BASE_DIR}/build" \
-    --dockerfile "${BASE_DIR}/build/Dockerfile" \
     --destination "${APP_IMAGE}" \
     --custom-platform linux/amd64 \
     --cache=true \
@@ -39,16 +41,18 @@ else
   rm -rf "${BASE_DIR}/build/kaniko"
   mkdir -p "${BASE_DIR}/build/kaniko/.docker"
   echo "${KANIKO_CONFIG}" >> "${BASE_DIR}/build/kaniko/.docker/config.json"
+  # Nevertheless, let's ensure it will always be deleted once the script exits:
+  set +e
   docker run --rm \
     -v "${BASE_DIR}/build:/workspace" \
     -v "${BASE_DIR}/build/kaniko/.docker:/kaniko/.docker" \
     gcr.io/kaniko-project/executor:debug \
       --context /workspace \
-      --dockerfile "/workspace/Dockerfile" \
       --destination "${APP_IMAGE}" \
       --custom-platform linux/amd64 \
       --cache=true \
       --cache-repo=${CI_REGISTRY_IMAGE}/cache
+  set -e
   rm -rf "${BASE_DIR}/build/kaniko"
 fi
 

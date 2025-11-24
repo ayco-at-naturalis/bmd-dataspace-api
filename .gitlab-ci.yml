@@ -73,8 +73,10 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
+    # Debug like hell:
     - echo $CI_PROJECT_DIR
     - ls -la $CI_PROJECT_DIR
+    - ls -la $CI_PROJECT_DIR/build
     - $CI_PROJECT_DIR/build/create-image.sh
 
 

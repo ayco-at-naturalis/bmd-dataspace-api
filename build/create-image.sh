@@ -26,9 +26,11 @@ else
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
 fi
 
+# Commit-based origin image
+APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 
-APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 KANIKO_CONFIG="{ \"auths\": { \"${CI_REGISTRY}\": { \"username\": \"${CI_REGISTRY_USER}\", \"password\": \"${CI_REGISTRY_PASSWORD}\" }}}"
 
 if [ -n "$GITLAB_PIPELINE" ]; then

@@ -12,8 +12,6 @@ variables:
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
   MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
-  # Commit-based origin image
-  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens
   id_tokens:
@@ -87,12 +85,20 @@ trivy_scan:
   image:
     name: docker.io/aquasec/trivy:latest
     entrypoint: [""]
-  variables:
-    TRIVY_CACHE_DIR: ".trivy"
+  cache:
+    key: trivy-cache
+    paths:
+      - .trivy/
   before_script:
-    - "wget --header \"PRIVATE-TOKEN: $TRIVYIGNORE_ACCESS_TOKEN\" \"https://gitlab.com/api/v4/projects/41791412/repository/files/trivyignore/raw?ref=main\" --output-document=.trivyignore || true"
+    - "wget --header \"PRIVATE-TOKEN: $TRIVYIGNORE_ACCESS_TOKEN\" \"https://gitlab.com/api/v4/projects/41791412/repository/files/trivyignore/raw?ref=main\" --output-document=.trivyignore"
     - trivy --version
-    - trivy image --cache-dir "$TRIVY_CACHE_DIR" --download-db-only --db-repository "$TRIVY_DB_REPOSITORY"
+    - mkdir -p .trivy
+    - |
+      if [ ! -f .trivy/db/trivy.db ] || [ $(find .trivy/ -name "trivy.db" -mtime +1 | grep "trivy.db") ]; then
+          echo "Downloading the trivy db ...";
+          rm -rf .trivy/db;
+          trivy image --cache-dir .trivy/ --download-db-only --db-repository $TRIVY_DB_REPOSITORY;
+      fi
   script:
     # GitLab-compatible report
     - >

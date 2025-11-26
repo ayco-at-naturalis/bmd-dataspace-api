@@ -13,7 +13,7 @@ fi
 
 if [ -n "$GITLAB_PIPELINE" ]; then
   BASE_DIR="${CI_PROJECT_DIR}"
-  if [ -n "${APP_IMAGE:-}" ]; then
+  if [ -z "${APP_IMAGE:-}" ]; then
     echo 'Missing variable APP_IMAGE in .gitlab-ci.yml'
     exit 1
   fi

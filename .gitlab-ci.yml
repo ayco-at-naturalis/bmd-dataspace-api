@@ -22,6 +22,7 @@ stages:
   - "Secret Detection"
   - "Maven Build"
   - "Create Image"
+  - "test"
   - "Trivy Scan"
   - "Tag Image"
   - "Deploy"
@@ -82,7 +83,7 @@ create_image:
     - build/create-image.sh
 
 trivy_scan:
-  stage: "Trivy Scan"
+  stage: "test"
   image:
     name: docker.io/aquasec/trivy:latest
     entrypoint: [""]

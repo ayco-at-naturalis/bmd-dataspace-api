@@ -118,6 +118,8 @@ trivy_scan:
       "${APP_IMAGE}"
   artifacts:
     when: always
+    # If we ever switch to GitLab Ultimate, this file will be picked up
+    # by GitLab and used in a sexy security dashboard
     reports:
       container_scanning: gl-container-scanning-report.json
     paths:

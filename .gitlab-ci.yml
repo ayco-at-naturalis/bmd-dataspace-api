@@ -12,6 +12,7 @@ variables:
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
   MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
   MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
+  # Commit-based original image
   APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens

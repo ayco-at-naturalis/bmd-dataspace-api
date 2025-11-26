@@ -34,6 +34,7 @@ cache:
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
 
 secret_detection:
   extends: .secret-analyzer

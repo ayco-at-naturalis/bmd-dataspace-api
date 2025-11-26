@@ -13,6 +13,10 @@ fi
 
 if [ -n "$GITLAB_PIPELINE" ]; then
   BASE_DIR="${CI_PROJECT_DIR}"
+  if [ -n "${APP_IMAGE:-}" ]; then
+    echo 'Missing variable APP_IMAGE in .gitlab-ci.yml'
+    exit 1
+  fi
 else
   # Resolve BASE_DIR from this script's location
   BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
@@ -24,10 +28,10 @@ else
   # shellcheck disable=SC1090
   . "${BASE_DIR}/build/build.env"
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
+  # Commit-based origin image
+  APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 fi
 
-# Commit-based origin image
-APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 
@@ -42,6 +46,7 @@ if [ -n "$GITLAB_PIPELINE" ]; then
     --custom-platform linux/amd64 \
     --cache=true \
     --cache-repo="${CI_REGISTRY_IMAGE}/cache"
+
 else
   # NB The kaniko directory is a git-ignored directory
   KANIKO_TMP="${BASE_DIR}/build/kaniko"

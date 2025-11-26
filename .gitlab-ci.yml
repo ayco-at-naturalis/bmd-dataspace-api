@@ -23,7 +23,6 @@ stages:
   - "Secret Detection"
   - "Maven Build"
   - "Create Image"
-  - "test"
   - "Trivy Scan"
   - "Tag Image"
   - "Deploy"
@@ -36,7 +35,6 @@ cache:
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
-  - template: Jobs/Container-Scanning.gitlab-ci.yml
 
 secret_detection:
   extends: .secret-analyzer
@@ -84,7 +82,7 @@ create_image:
     - build/create-image.sh
 
 trivy_scan:
-  stage: "test"
+  stage: "Trivy Scan"
   image:
     name: docker.io/aquasec/trivy:latest
     entrypoint: [""]

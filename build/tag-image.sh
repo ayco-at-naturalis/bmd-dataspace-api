@@ -54,3 +54,5 @@ if [[ "${CI_COMMIT_REF_SLUG}" = "main" ]]; then
   docker tag "${image}" "${CI_REGISTRY_IMAGE}:latest"
   docker push "${CI_REGISTRY_IMAGE}:latest"
 fi
+
+echo

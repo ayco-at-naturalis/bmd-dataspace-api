@@ -27,3 +27,5 @@ mkdir "${BASE_DIR}/build/dependencies"
 
 echo '---> Starting build'
 "${BASE_DIR}/mvnw" ${MAVEN_CLI_OPTS} clean install
+
+echo

@@ -20,7 +20,7 @@ public class ROCrateController {
     this.roCrateDao = roCrateDao;
   }
 
-  @PostMapping("/ingest")
+  @GetMapping("/ingest")
   public ResponseEntity<Void> ingest(@RequestParam("fetchFrom") URI fetchFrom) {
     log.info("Ingesting RO-Crate. RO-Crate fetched from: {}", fetchFrom);
     roCrateDao.ingestFromUrl(fetchFrom);

@@ -1,4 +1,4 @@
-package eu.bmdproject.dataspace;
+package eu.bmdproject.dataspace.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -14,6 +14,6 @@ public class OpenApiConfig {
         .info(new Info()
             .title("BMD Dataspace API")
             .version("0.1.0")
-            .description("REST interface for interacting with the BMD Dataspace"));
+            .description("REST API for interacting with the BMD Dataspace"));
   }
 }

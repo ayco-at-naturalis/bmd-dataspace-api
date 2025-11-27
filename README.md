@@ -23,7 +23,7 @@ These endpoints are available by default in all environments.
 ### 🔧 Configuration
 
 The OpenAPI metadata (title, version, description) is defined in  
-[`eu.bmdproject.dataspace.OpenApiConfig`](src/main/java/eu/bmdproject/dataspace/OpenApiConfig.java).
+[`eu.bmdproject.dataspace.config.OpenApiConfig`](src/main/java/eu/bmdproject/dataspace/OpenApiConfig.java).
 
 If you need to customize groupings, include/exclude endpoints, or add authentication 
 details to the docs, refer to the [Springdoc OpenAPI documentation](https://springdoc.org/).

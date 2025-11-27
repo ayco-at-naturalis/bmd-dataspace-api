@@ -1,6 +1,12 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.GraphProperties;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.ReadWrite;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.klojang.check.Check;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -23,26 +30,25 @@ import java.util.zip.ZipInputStream;
 import static org.klojang.check.CommonChecks.notNull;
 
 @Repository
-public class FusekiDao implements ROCrateDao {
+public class JenaDao implements ROCrateDao {
 
   private static final String RO_CRATE_FILE = "ro-crate-metadata.json";
   private static final Duration HTTP_TIMEOUT = Duration.ofSeconds(30);
 
-  private static final Logger log = LoggerFactory.getLogger(FusekiDao.class);
+  private static final Logger log = LoggerFactory.getLogger(JenaDao.class);
 
-
-  private final WebClient fusekiClient;
   private final WebClient httpClient;
   private final GraphProperties graphProps;
+  private final Dataset dataset;
 
-  public FusekiDao(
-      @Qualifier("fusekiClient") WebClient fusekiClient,
+  public JenaDao(
       @Qualifier("httpClient") WebClient httpClient,
-      GraphProperties graphProps
+      GraphProperties graphProps,
+      Dataset dataset
   ) {
-    this.fusekiClient = fusekiClient;
     this.httpClient = httpClient;
     this.graphProps = graphProps;
+    this.dataset = dataset;
   }
 
   @Override
@@ -51,7 +57,7 @@ public class FusekiDao implements ROCrateDao {
     String jsonld = getRoCrateMetadata(zipBytes);
     Check.that(jsonld)
         .is(notNull(), () -> new DaoException("RO-Crate missing " + RO_CRATE_FILE + " in ZIP: " + url));
-    String id = UUID.nameUUIDFromBytes(jsonld.getBytes()).toString();
+    String id = UUID.nameUUIDFromBytes(jsonld.getBytes(StandardCharsets.UTF_8)).toString();
     String graphUri = graphUriFor(id);
     saveGraph(graphUri, jsonld, MediaType.valueOf("application/ld+json"));
   }
@@ -78,19 +84,34 @@ public class FusekiDao implements ROCrateDao {
   }
 
   private void saveGraph(String graphUri, String body, MediaType contentType) {
-    String path = "/data"; // dataset already in base-url
-    try {
-      log.debug("Saving ro-crate-metadata.json to triple store. Graph URI: {}", graphUri);
-      fusekiClient.put()
-          .uri(b -> b.path(path).queryParam("graph", graphUri).build())
-          .contentType(contentType)
-          .bodyValue(body)
-          .retrieve()
-          .bodyToMono(Void.class)
-          .timeout(HTTP_TIMEOUT)
-          .block();
+    if (!MediaType.valueOf("application/ld+json").isCompatibleWith(contentType)) {
+      throw new DaoException("Unsupported content type for RO-Crate metadata: " + contentType);
+    }
+
+    log.debug("Saving ro-crate-metadata.json to Jena Dataset. Graph URI: {}", graphUri);
+
+    // Parse JSON-LD into a Jena Model
+    Model model = ModelFactory.createDefaultModel();
+    try (InputStream in = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8))) {
+      RDFDataMgr.read(model, in, Lang.JSONLD);
     } catch (Exception e) {
-      throw new DaoException("Failed to upsert graph " + graphUri, e);
+      throw new DaoException("Failed to parse RO-Crate JSON-LD", e);
+    }
+
+    // Upsert into named graph using Jena transactions
+    dataset.begin(ReadWrite.WRITE);
+    try {
+      // "Upsert": drop existing named model and replace it
+      if (dataset.containsNamedModel(graphUri)) {
+        dataset.removeNamedModel(graphUri);
+      }
+      dataset.addNamedModel(graphUri, model);
+      dataset.commit();
+    } catch (Exception e) {
+      dataset.abort();
+      throw new DaoException("Failed to upsert graph " + graphUri + " into Jena Dataset", e);
+    } finally {
+      dataset.end();
     }
   }
 

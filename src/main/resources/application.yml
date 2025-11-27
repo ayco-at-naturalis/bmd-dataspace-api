@@ -7,9 +7,6 @@ spring:
       enabled: true
 
 app:
-  fuseki:
-    base-url: ${FUSEKI_DATASET_BASE_URL:?}  # e.g. http://localhost:3030/rocrate
-    username: ${FUSEKI_USERNAME:}
-    password: ${FUSEKI_PASSWORD:}
   graph:
-    base-iri: ${GRAPH_BASE_IRI:urn:uuid:}
+    base-iri: "${GRAPH_BASE_IRI:urn:uuid:}"
+    jena-data-dir: "${JENA_DATA_DIR:/data/bmd/jena}"

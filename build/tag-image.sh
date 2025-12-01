@@ -47,7 +47,7 @@ echo "---> Adding tag \"${CI_COMMIT_REF_SLUG}\""
 docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
 docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
 
-if [[ -n "${CI_COMMIT_TAG}" ]]; then
+if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
   echo "---> Adding tag \"${CI_COMMIT_TAG}\""
   docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
   docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"

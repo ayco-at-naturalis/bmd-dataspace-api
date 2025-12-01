@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# get tag associated with commit (i.e. GitLab's CI_COMMIT_TAG)
 get_commit_ref_slug() {
   branch="$(git rev-parse --abbrev-ref HEAD)"
   _to_slug "${branch}"

@@ -13,10 +13,6 @@ fi
 
 if [ -n "$GITLAB_PIPELINE" ]; then
   BASE_DIR="${CI_PROJECT_DIR}"
-  if [ -z "${COMMIT_HASH_IMAGE:-}" ]; then
-    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
-    exit 1
-  fi
 else
   # Resolve BASE_DIR from this script's location
   BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
@@ -26,11 +22,20 @@ else
     exit 1
   fi
   . "${BASE_DIR}/build/build.env"
-  CI_COMMIT_REF_SLUG="$(git rev-parse --abbrev-ref HEAD)"
+fi
+
+. "${BASE_DIR}/build/functions.sh"
+
+if [ -n "$GITLAB_PIPELINE" ]; then
+  if [ -z "${COMMIT_HASH_IMAGE:-}" ]; then
+    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
+    exit 1
+  fi
+else
+  CI_COMMIT_REF_SLUG="$(get_commit_ref_slug)" # defined in functions.sh
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
   COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 fi
-
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 

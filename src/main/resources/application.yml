@@ -9,4 +9,8 @@ spring:
 app:
   graph:
     base-iri: "${GRAPH_BASE_IRI:urn:uuid:}"
+    # NB When running inside a Docker container, the Jena data directory inside
+    # the container will always be /data/bmd/jena. See docker-compose.yml. In that
+    # the directory on the Docker host is variable, but it is volume-mapped to
+    # /data/bmd/jena.
     jena-data-dir: "${JENA_DATA_DIR:/data/bmd/jena}"

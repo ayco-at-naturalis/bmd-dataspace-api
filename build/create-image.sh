@@ -13,8 +13,8 @@ fi
 
 if [ -n "$GITLAB_PIPELINE" ]; then
   BASE_DIR="${CI_PROJECT_DIR}"
-  if [ -z "${APP_IMAGE:-}" ]; then
-    echo 'Missing variable APP_IMAGE in .gitlab-ci.yml'
+  if [ -z "${COMMIT_HASH_IMAGE:-}" ]; then
+    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
     exit 1
   fi
 else
@@ -25,11 +25,10 @@ else
     echo 'Copy build.env.template to build.env and modify as appropriate'
     exit 1
   fi
-  # shellcheck disable=SC1090
   . "${BASE_DIR}/build/build.env"
+  CI_COMMIT_REF_SLUG="$(git rev-parse --abbrev-ref HEAD)"
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
-  # Commit-based origin image
-  APP_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+  COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 fi
 
 
@@ -42,7 +41,7 @@ if [ -n "$GITLAB_PIPELINE" ]; then
   echo "${KANIKO_CONFIG}" > /kaniko/.docker/config.json
   /kaniko/executor \
     --context "${BASE_DIR}/build" \
-    --destination "${APP_IMAGE}" \
+    --destination "${COMMIT_HASH_IMAGE}" \
     --custom-platform linux/amd64 \
     --cache=true \
     --cache-repo="${CI_REGISTRY_IMAGE}/cache"
@@ -60,7 +59,7 @@ else
     -v "${KANIKO_TMP}/.docker:/kaniko/.docker" \
     gcr.io/kaniko-project/executor \
       --context /workspace \
-      --destination "${APP_IMAGE}" \
+      --destination "${COMMIT_HASH_IMAGE}" \
       --custom-platform linux/amd64 \
       --cache=true \
       --cache-repo=${CI_REGISTRY_IMAGE}/cache

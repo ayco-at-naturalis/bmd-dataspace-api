@@ -10,10 +10,8 @@ variables:
   VAULT_SERVER_URL: "https://vault.naturalis.io"
   VAULT_PATH: "${SERVICE_DOMAIN}/${SERVICE_NAME}"
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
-  MAVEN_OPTS: "-Dmaven.repo.local=./docker/mvn-repo --enable-native-access=ALL-UNNAMED"
-  MAVEN_CLI_OPTS: "-B -V --no-transfer-progress"
   # Commit-based original image
-  APP_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHA}"
+  COMMIT_HASH_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens
   id_tokens:
@@ -109,13 +107,13 @@ trivy_scan:
       --scanners vuln
       --format template --template "@/contrib/gitlab.tpl"
       -o gl-container-scanning-report.json
-      "${APP_IMAGE}"
+      "${COMMIT_HASH_IMAGE}"
     # Hard-fail on HIGH/CRITICAL (after writing the report)
     - >
       trivy image --cache-dir "$TRIVY_CACHE_DIR" --no-progress
       --username "$CI_REGISTRY_USER" --password "$CI_JOB_TOKEN"
       --ignore-unfixed --exit-code 1 --severity HIGH,CRITICAL
-      "${APP_IMAGE}"
+      "${COMMIT_HASH_IMAGE}"
   artifacts:
     when: always
     # If we ever switch to GitLab Ultimate, this file will be picked up

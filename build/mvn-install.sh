@@ -11,6 +11,8 @@ else
   BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
+source "${BASE_DIR}/build/functions.sh"
+
 echo 'Executing Maven build'
 
 if [[ ! -d "${BASE_DIR}/build/mvn-repo" ]]; then
@@ -23,8 +25,6 @@ rm -rf "${BASE_DIR}/build/dependencies"
 mkdir "${BASE_DIR}/build/dependencies"
 
 echo '---> Starting build'
-MAVEN_OPTS="-Dmaven.repo.local=\"${BASE_DIR}/build/mvn-repo\" --enable-native-access=ALL-UNNAMED"
-MAVEN_CLI_OPTS="-B -V --no-transfer-progress --file=\"${BASE_DIR}/pom.xml\""
-"${BASE_DIR}/mvnw" ${MAVEN_CLI_OPTS} clean install
+run_maven clean install
 
 echo

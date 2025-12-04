@@ -1,24 +1,35 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-set -euo pipefail
+set -eu
 
 # Are we running inside a GitLab pipeline? Then we have CI_JOB_ID in our env.
-GITLAB_PIPELINE="${CI_JOB_ID:-}"
-
-if [[ "${GITLAB_PIPELINE}" ]]; then
-  BASE_DIR="${CI_PROJECT_DIR:-}"
+if [ -n "${CI_JOB_ID-}" ]; then
+  GITLAB_PIPELINE=1
 else
-  BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  GITLAB_PIPELINE=
 fi
+
+if [ -n "${GITLAB_PIPELINE}" ]; then
+  BASE_DIR="${CI_PROJECT_DIR}"
+else
+  # Resolve BASE_DIR from this script's location
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
+  if [ ! -f "${BASE_DIR}/build/build.env" ]; then
+    echo 'Local builds require presence of build.env'
+    echo 'Copy build.env.template to build.env and modify as appropriate'
+    exit 1
+  fi
+  . "${BASE_DIR}/build/build.env"
+fi
+
+. "${BASE_DIR}/build/functions.sh"
 
 echo "Publishing Javadocs"
 
 rm -rf "${BASE_DIR}/public"
 mkdir "${BASE_DIR}/public"
 
-MAVEN_OPTS="-Dmaven.repo.local=\"${BASE_DIR}/build/mvn-repo\" --enable-native-access=ALL-UNNAMED"
-MAVEN_CLI_OPTS="-B -V --no-transfer-progress --file=\"${BASE_DIR}/pom.xml\""
-"${BASE_DIR}/mvnw" ${MAVEN_CLI_OPTS} javadoc:javadoc
+run_maven 'javadoc:javadoc'
 
 cp -r "${BASE_DIR}/target/site/apidocs/"* "${BASE_DIR}/public/"
 

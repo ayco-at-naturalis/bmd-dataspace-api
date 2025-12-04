@@ -5,13 +5,13 @@
 set -eu
 
 # Are we running inside a GitLab pipeline? Then we have CI_JOB_ID in our env.
-if [ -n "${CI_JOB_ID:-}" ]; then
+if [ -n "${CI_JOB_ID-}" ]; then
   GITLAB_PIPELINE=1
 else
   GITLAB_PIPELINE=
 fi
 
-if [ -n "$GITLAB_PIPELINE" ]; then
+if [ -n "${GITLAB_PIPELINE}" ]; then
   BASE_DIR="${CI_PROJECT_DIR}"
 else
   # Resolve BASE_DIR from this script's location
@@ -26,8 +26,8 @@ fi
 
 . "${BASE_DIR}/build/functions.sh"
 
-if [ -n "$GITLAB_PIPELINE" ]; then
-  if [ -z "${COMMIT_HASH_IMAGE:-}" ]; then
+if [ -n "${GITLAB_PIPELINE}" ]; then
+  if [ -z "${COMMIT_HASH_IMAGE-}" ]; then
     echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
     exit 1
   fi
@@ -67,7 +67,7 @@ else
       --destination "${COMMIT_HASH_IMAGE}" \
       --custom-platform linux/amd64 \
       --cache=true \
-      --cache-repo=${CI_REGISTRY_IMAGE}/cache
+      --cache-repo "${CI_REGISTRY_IMAGE}/cache"
 fi
 
 echo

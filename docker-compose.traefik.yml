@@ -1,0 +1,70 @@
+services:
+
+  traefik:
+    image: registry.gitlab.com/naturalis/lib/docker/traefik:v3.3
+    restart: unless-stopped
+    depends_on:
+      - docker-socket-proxy
+    networks:
+      - web
+      - docker-socket-proxy
+    ports:
+      - "${HOST_IP:?Missing HOST_IP}:80:80"
+      - "${HOST_IP:?Missing HOST_IP}:443:443"
+      # Uncomment to enable dashboard
+      #- 127.0.0.1:${TRAEFIK_API_PORT:-8079}:8080
+    volumes:
+      - "./letsencrypt:/letsencrypt:rw"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.endpoint=tcp://docker-socket-proxy:2375"
+      - "--providers.docker.network=web"
+      - "--global.sendAnonymousUsage=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.route53.acme.dnschallenge=true"
+      - "--certificatesresolvers.route53.acme.dnschallenge.provider=route53"
+      - "--certificatesresolvers.route53.acme.storage=/letsencrypt/route53.json"
+      - "--log.level=ERROR"
+      # Uncomment to enable dashboard
+      #- --api=true
+      #- --api.insecure=true
+      #- --log.level=DEBUG
+    environment:
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:?Missing AWS_ACCESS_KEY_ID}"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:?Missing AWS_SECRET_ACCESS_KEY}"
+
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:0.1.1
+    restart: unless-stopped
+    networks:
+      - docker-socket-proxy
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    environment:
+      CONTAINERS: 1
+      SERVICES: 1
+      NETWORKS: 1
+      TASKS: 1
+
+  bmd-dataspace-api:
+    networks:
+      - web
+    # Override docker-compose.yml:
+    ports: []
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.bmd-dataspace.rule=Host(`${FQDN:?Missing FQDN}`)"
+      - "traefik.http.routers.bmd-dataspace.entrypoints=web,websecure"
+      - "traefik.http.routers.bmd-dataspace.tls.certresolver=route53"
+      - "traefik.http.routers.bmd-dataspace.middlewares=bmd-dataspace-https-redirect"
+      - "traefik.http.middlewares.bmd-dataspace-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.services.bmd-dataspace.loadbalancer.server.port=8080"
+
+networks:
+  web:
+    external: false
+  docker-socket-proxy:
+    external: false

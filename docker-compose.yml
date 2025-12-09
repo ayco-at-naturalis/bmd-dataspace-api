@@ -1,13 +1,11 @@
-version: "3.9"
-
 services:
-  wp4-dataspace-api:
-    image: "registry.gitlab.com/naturalis/bii/bmd/bmd-dataspace-api:${APP_IMAGE_TAG}"
-    container_name: wp4-dataspace-api
+  bmd-dataspace-api:
+    image: "registry.gitlab.com/naturalis/bii/bmd/bmd-dataspace-api:${APP_IMAGE_TAG:?Missing APP_IMAGE_TAG}"
+    container_name: bmd-dataspace-api
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - "${JENA_DATA_DIR:?}:/data/bmd/jena"
+      - "${JENA_DATA_DIR:?Missing JENA_DATA_DIR}:/data/bmd/jena"
     env_file:
       - .env

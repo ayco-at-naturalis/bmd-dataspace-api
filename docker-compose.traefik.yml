@@ -1,7 +1,7 @@
 services:
 
   traefik:
-    image: registry.gitlab.com/naturalis/lib/docker/traefik:v3.3
+    image: registry.gitlab.com/naturalis/lib/docker/traefik:latest
     restart: unless-stopped
     depends_on:
       - docker-socket-proxy

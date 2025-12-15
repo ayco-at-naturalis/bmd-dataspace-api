@@ -7,5 +7,7 @@ services:
       - "8080:8080"
     volumes:
       - "${JENA_DATA_DIR:?Missing JENA_DATA_DIR}:/data/bmd/jena"
+    environment:
+      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:?Missing JAVA_TOOL_OPTIONS}"
     env_file:
       - .env

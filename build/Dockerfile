@@ -8,10 +8,7 @@ COPY dependencies /opt/classpath
 COPY logback-spring.xml /opt/classpath
 
 ENTRYPOINT ["java"]
-CMD [ "-Xms4096m" \
-    , "-Xmx4096m" \
-    , "-Dfile.encoding=UTF-8" \
-    , "-Dlogging.config=/opt/classpath/logback-spring.xml" \
-    , "-cp" \
-    , "/opt/classpath/*" \
-    , "eu.bmdproject.dataspace.BmdDataspaceApiApplication" ]
+CMD [ "-Dfile.encoding=UTF-8", \
+      "-Dlogging.config=/opt/classpath/logback-spring.xml", \
+      "-cp", "/opt/classpath/*", \
+      "eu.bmdproject.dataspace.BmdDataspaceApiApplication" ]

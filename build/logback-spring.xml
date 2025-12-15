@@ -20,12 +20,10 @@
     </encoder>
   </appender>
 
-  <!-- Root logger -->
-  <root level="INFO">
+  <root level="${DEFAULT_LOG_LEVEL}">
     <appender-ref ref="CONSOLE"/>
     <appender-ref ref="FILE"/>
   </root>
 
-  <!-- Set DEBUG for your own packages -->
-  <logger name="eu.bmdproject.dataspace" level="DEBUG"/>
+  <logger name="eu.bmdproject.dataspace" level="${APP_LOG_LEVEL}"/>
 </configuration>

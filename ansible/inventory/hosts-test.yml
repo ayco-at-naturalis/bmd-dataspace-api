@@ -1,0 +1,74 @@
+---
+all:
+  hosts:
+    jump:
+      ansible_host: jump.example.org
+      ansible_user: ops
+
+ungrouped: {}
+
+prod:
+  hosts:
+    prod-app-1:
+      ansible_host: 10.0.1.11
+    prod-app-2:
+      ansible_host: 10.0.1.12
+
+  children:
+    prod-db:
+      hosts:
+        prod-db-1:
+          ansible_host: 10.0.1.21
+        prod-db-2:
+          ansible_host: 10.0.1.22
+
+    prod-cache:
+      hosts:
+        prod-redis-1:
+          ansible_host: 10.0.1.31
+        prod-redis-2:
+          ansible_host: 10.0.1.32
+
+staging:
+  hosts:
+    stage-app-1:
+      ansible_host: 10.0.2.11
+    stage-app-2:
+      ansible_host: 10.0.2.12
+
+  children:
+    stage-db:
+      hosts:
+        stage-db-1:
+          ansible_host: 10.0.2.21
+
+webservers:
+  hosts:
+    prod-app-1:
+    prod-app-2:
+    stage-app-1:
+    stage-app-2:
+
+dbservers:
+  hosts:
+    prod-db-1:
+    prod-db-2:
+    stage-db-1:
+
+special:
+  children:
+    reporting:
+      hosts:
+        prod-app-2:
+        stage-app-1:
+
+    analytics:
+      hosts:
+        prod-db-1:
+        stage-db-1:
+
+# A host ONLY in all/ungrouped — should return no groups
+lonely:
+  hosts:
+    orphan-host:
+      ansible_host: 10.0.99.99

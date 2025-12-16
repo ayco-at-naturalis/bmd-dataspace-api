@@ -142,8 +142,8 @@ deploy_development:
   before_script:
     - set -eu
   script:
-    - ansible/get_vault_token.sh
-    #- ansible/pull_vault_secrets.sh
+    - ansible/get-vault-token.sh
+    #- ansible/pull-vault-secrets.sh
 
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/

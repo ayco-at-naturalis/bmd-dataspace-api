@@ -10,8 +10,6 @@ variables:
   VAULT_SERVER_URL: "https://vault.naturalis.io"
   VAULT_PATH: "${SERVICE_DOMAIN}/${SERVICE_NAME}"
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
-  # Commit-based original image
-  COMMIT_HASH_IMAGE: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 
 .job_id_tokens: &job_id_tokens
   id_tokens:
@@ -134,6 +132,18 @@ tag_docker_image:
     - build/tag-image.sh
 
 
+deploy_development:
+  <<: *job_id_tokens
+  stage: Deploy
+  image: registry.gitlab.com/naturalis/lib/alpine-bookworm-cicd-utils:bookworm
+  variables:
+    DEPLOY_HOST: dev
+  before_script:
+    - set -eu
+  script:
+    - ansible/get_vault_token.sh
+    #- ansible/pull_vault_secrets.sh
+
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
   stage: "Publish Javadocs"
@@ -142,3 +152,5 @@ publish_javadocs:
   artifacts:
     paths:
       - public
+
+

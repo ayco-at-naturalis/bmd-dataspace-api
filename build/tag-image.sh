@@ -1,41 +1,41 @@
 #!/usr/bin/env bash
 
+# tag-image.sh
+# Adds various tags to the image created by create-image.sh
+
 set -euo pipefail
 
-# Are we running inside a GitLab pipeline? Then we have CI_JOB_ID in our env.
-GITLAB_PIPELINE="${CI_JOB_ID:-}"
+# Are we running inside a GitLab pipeline?
+is_gitlab_pipeline() {
+  [ -n "${CI_JOB_ID-}" ]
+}
 
-if [[ -n "${GITLAB_PIPELINE}" ]]; then
+if is_gitlab_pipeline; then
   BASE_DIR="${CI_PROJECT_DIR}"
-  if [ -z "${COMMIT_HASH_IMAGE:-}" ]; then
-    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
-    exit 1
-  fi
-else
-  BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  if [[ ! -f "${BASE_DIR}/build/build.env" ]]; then
+else # Resolve using this script's location
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
+fi
+
+. "${BASE_DIR}/build/functions.sh"
+
+if ! is_gitlab_pipeline; then
+  if [ ! -f "${BASE_DIR}/build/build.env" ]; then
     echo 'Local builds require presence of build.env'
     echo 'Copy build.env.template to build.env and modify as appropriate'
     exit 1
   fi
-  source "${BASE_DIR}/build/build.env"
+  . "${BASE_DIR}/build/build.env"
 fi
 
-source "${BASE_DIR}/build/functions.sh"
-
-if [[ -n "${GITLAB_PIPELINE}" ]]; then
-  if [[ -z "${COMMIT_HASH_IMAGE:-}" ]]; then
-    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
-    exit 1
-  fi
-else
+if ! is_gitlab_pipeline; then
   CI_COMMIT_REF_SLUG="$(get_commit_ref_slug)" # defined in functions.sh
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
   CI_COMMIT_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
-  COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 fi
 
 echo "Tagging Docker image for commit \"${CI_COMMIT_SHA}\""
+
+COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 
 echo '---> Authenticating with GitLab container registry'
 echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"

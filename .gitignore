@@ -13,10 +13,9 @@
 /build/mvn-repo/
 /build/kaniko/
 
+.vault-token
 /ansible/mount/
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/
-/ansible/roles/nickjj.docker/
-/ansible/roles/docker-compose/
 /ansible/secrets/
 /ansible/.vagrant/

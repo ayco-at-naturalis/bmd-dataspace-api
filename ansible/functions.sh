@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-if [ -z "${BASE_DIR-}" ]; then
-  # Are we running inside a GitLab pipeline?
-  GITLAB_PIPELINE=$(if [[ -z "${CI_JOB_ID:-}" ]]; then echo false; else echo true; fi)
-  if [[ ${GITLAB_PIPELINE} = true ]]; then
-    BASE_DIR="${CI_PROJECT_DIR}"
-  else
-    BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  fi
-fi
-
 HOSTS_FILE="${BASE_DIR}/ansible/inventory/hosts.yml"
 
 # Prints a space-separated list of all groups within hosts.yml file to which the specified
@@ -19,20 +9,20 @@ HOSTS_FILE="${BASE_DIR}/ansible/inventory/hosts.yml"
 get_ansible_groups() {
   if [[ $# -ne 1 ]]; then
     echo "USAGE: get_ansible_groups <hostname>" >&2
-    return 2
+    return 1
   fi
 
   local host="$1"
 
   if ! ansible-inventory -i "$HOSTS_FILE" --host "$host" > /dev/null 2>&1; then
     echo "No such host: \"$host\""
-    return 2
+    return 1
   fi
 
   local json
   json="$(ansible-inventory -i "$HOSTS_FILE" --list 2>/dev/null)" || {
     echo "Error: failed to run ansible-inventory using $HOSTS_FILE" >&2
-    return 2
+    return 1
   }
 
   local groups
@@ -72,7 +62,3 @@ get_ansible_groups() {
   [[ -n "$groups" ]] && printf '%s\n' "$groups"
   return 0
 }
-
-if [[ $# -eq 1 ]]; then
-  get_ansible_groups $1
-fi

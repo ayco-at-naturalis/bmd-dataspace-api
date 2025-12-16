@@ -1,21 +1,26 @@
 #!/bin/sh
 
-# NB we cannot use bash because the Kaniko container does not support it.
+# create-image.sh
+# Creates the original, commit-based Docker image, which will later be decorated
+# with other tags using tag-image.sh. Note that we cannot use bash because the
+# Kaniko container does not support it.
 
 set -eu
 
-# Are we running inside a GitLab pipeline? Then we have CI_JOB_ID in our env.
-if [ -n "${CI_JOB_ID-}" ]; then
-  GITLAB_PIPELINE=1
-else
-  GITLAB_PIPELINE=
+# Are we running inside a GitLab pipeline?
+is_gitlab_pipeline() {
+  [ -n "${CI_JOB_ID-}" ]
+}
+
+if is_gitlab_pipeline; then
+  BASE_DIR="${CI_PROJECT_DIR}"
+else # Resolve using this script's location
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 fi
 
-if [ -n "${GITLAB_PIPELINE}" ]; then
-  BASE_DIR="${CI_PROJECT_DIR}"
-else
-  # Resolve BASE_DIR from this script's location
-  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
+. "${BASE_DIR}/build/functions.sh"
+
+if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/build/build.env" ]; then
     echo 'Local builds require presence of build.env'
     echo 'Copy build.env.template to build.env and modify as appropriate'
@@ -24,24 +29,18 @@ else
   . "${BASE_DIR}/build/build.env"
 fi
 
-. "${BASE_DIR}/build/functions.sh"
-
-if [ -n "${GITLAB_PIPELINE}" ]; then
-  if [ -z "${COMMIT_HASH_IMAGE-}" ]; then
-    echo 'Missing variable COMMIT_HASH_IMAGE in .gitlab-ci.yml'
-    exit 1
-  fi
-else
+if ! is_gitlab_pipeline; then
   CI_COMMIT_REF_SLUG="$(get_commit_ref_slug)" # defined in functions.sh
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
-  COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 fi
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 
+COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
+
 KANIKO_CONFIG="{ \"auths\": { \"${CI_REGISTRY}\": { \"username\": \"${CI_REGISTRY_USER}\", \"password\": \"${CI_REGISTRY_PASSWORD}\" }}}"
 
-if [ -n "$GITLAB_PIPELINE" ]; then
+if is_gitlab_pipeline; then
   mkdir -p /kaniko/.docker
   echo "${KANIKO_CONFIG}" > /kaniko/.docker/config.json
   /kaniko/executor \

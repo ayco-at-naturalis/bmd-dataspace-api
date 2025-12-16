@@ -88,6 +88,7 @@ trivy_scan:
     paths:
       - .trivy/
   before_script:
+    - COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
     - "wget --header \"PRIVATE-TOKEN: $TRIVYIGNORE_ACCESS_TOKEN\" \"https://gitlab.com/api/v4/projects/41791412/repository/files/trivyignore/raw?ref=main\" --output-document=.trivyignore"
     - trivy --version
     - mkdir -p .trivy

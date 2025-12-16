@@ -1,0 +1,68 @@
+---
+
+- name: Verify presence of docker-compose.bak.yml
+  ansible.builtin.stat:
+    path: /opt/projects/{{ project }}/docker compose.yml
+  register: dc_file_stats
+
+# If docker-compose.bak.yml already exists, we use that version
+# stop the containers (after all, they were brought up with
+# that version)
+- name: Stop brahms-oaipmh client
+  ansible.builtin.shell:
+    chdir: /opt/projects/{{ project }}
+    cmd: docker compose down --rmi=all --remove-orphans
+  when: dc_file_stats.stat.exists
+
+- name: Create project directory
+  ansible.builtin.file:
+    path: /opt/projects/{{ project }}
+    state: directory
+  when: not dc_file_stats.stat.exists
+
+- name: Create log directory
+  ansible.builtin.file:
+    # Directory on host machine. This directory is mapped to
+    # /opt/brahms-oaipmh/log inside the Docker container. This
+    # is where logback is configured to write the log file to.
+    # See docker/logback.xml. The mapping takes place in
+    # ansible/roles/deploy/files/docker-compose.bak.yml
+    path: /var/log/brahms-oaipmh
+    state: directory
+    mode: 0755
+
+# Delete docker-compose.bak.yml first, so we can tell from
+# the file's modified date that the deployment **did**
+# take place.
+- name: Delete docker compose.yml
+  ansible.builtin.file:
+    path: /opt/projects/{{ project }}/docker-compose.bak.yml
+    state: absent
+  when: dc_file_stats.stat.exists
+
+- name: Push docker-compose.bak.yml
+  ansible.builtin.copy:
+    src: docker-compose.bak.yml
+    dest: /opt/projects/{{ project }}/
+    mode: 0600
+    owner: root
+    group: root
+
+- name: Create env file
+  ansible.builtin.template:
+    src: env.j2
+    dest: /opt/projects/{{ project }}/.env
+    mode: 0600
+    owner: root
+    group: root
+
+- name: Pull containers
+  ansible.builtin.shell:
+    chdir: /opt/projects/{{ project }}
+    cmd: docker compose pull
+
+- name: Start containers
+  ansible.builtin.shell:
+    chdir: /opt/projects/{{ project }}
+    cmd: docker compose up -d
+

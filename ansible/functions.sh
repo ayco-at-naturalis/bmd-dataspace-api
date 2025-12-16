@@ -10,7 +10,7 @@ if [ -z "${BASE_DIR-}" ]; then
   fi
 fi
 
-HOSTS_FILE="${BASE_DIR}/ansible/inventory/hosts-test.yml"
+HOSTS_FILE="${BASE_DIR}/ansible/inventory/hosts.yml"
 
 # Prints a space-separated list of all groups within hosts.yml file to which the specified
 # hosts belongs (either directly or indirectly). The implicit "all" and "ungrouped" groups

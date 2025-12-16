@@ -1,4 +1,6 @@
 ---
+# Complex hosts file to test functions like get_anbsible_groups() in
+# functions.sh with. No real-world relevance.
 all:
   hosts:
     jump:

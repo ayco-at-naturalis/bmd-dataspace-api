@@ -12,6 +12,9 @@ else
 	BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
+source "${BASE_DIR}/ansible/functions.sh"
+
+
 : "${VAULT_SERVER_URL:?Missing value for VAULT_SERVER_URL}"
 : "${VAULT_PATH:?Missing value for VAULT_PATH}"
 : "${DEPLOY_HOST:?Missing value for DEPLOY_HOST}"

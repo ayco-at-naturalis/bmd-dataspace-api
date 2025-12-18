@@ -62,3 +62,34 @@ get_ansible_groups() {
   [[ -n "$groups" ]] && printf '%s\n' "$groups"
   return 0
 }
+
+# Ensures HC vault CLI is available. While you can use Hashicorp's Docker image to
+# retrieve HC Vault secrets, using it to retrieve a vault token is almost impossible
+# unless you print an extended warning beforehand about what might happen (having to
+# log in via Azure AD and have your 2F app ready). Therefore, if the user has not
+# already installed the CLI already, we install it in the .tools directory (git ignored)
+# of this git repository.
+ensure_vault_cli() {
+  if command -v vault >/dev/null 2>&1; then # already installed
+    return 0
+  fi
+  local version="${VAULT_CLI_VERSION:?Missing value for VAULT_CLI_VERSION}"
+  local os="linux"
+  local arch="amd64"
+  local tools_dir="${BASE_DIR}/.tools/vault/${version}"
+  local vault_bin="${tools_dir}/vault"
+  local zip_name="vault_${version}_${os}_${arch}.zip"
+  local zip_path="${tools_dir}/${zip_name}"
+  mkdir -p "$tools_dir"
+  echo "---> Bootstrapping HC Vault CLI from $tools_dir"
+  if [[ ! -x "$vault_bin" ]]; then
+    # Download
+    curl -fsSL -o "$zip_path" "https://releases.hashicorp.com/vault/${version}/${zip_name}"
+    # Unzip
+    (cd "$tools_dir" && unzip -o "$zip_name" >/dev/null)
+    chmod +x "$vault_bin"
+  fi
+  export PATH="${tools_dir}:$PATH"
+}
+
+

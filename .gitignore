@@ -13,9 +13,11 @@
 /build/mvn-repo/
 /build/kaniko/
 
-.vault-token
+*.vault-token
 /ansible/mount/
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/
 /ansible/secrets/
 /ansible/.vagrant/
+
+/.tools/

@@ -8,7 +8,7 @@
 # If docker-compose.bak.yml already exists, we use that version
 # stop the containers (after all, they were brought up with
 # that version)
-- name: Stop brahms-oaipmh client
+- name: Stop bapplication
   ansible.builtin.shell:
     chdir: /opt/projects/{{ project }}
     cmd: docker compose down --rmi=all --remove-orphans

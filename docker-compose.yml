@@ -1,12 +1,15 @@
+---
 services:
   bmd-dataspace-api:
-    image: "registry.gitlab.com/naturalis/bii/bmd/bmd-dataspace-api:${APP_IMAGE_TAG:?Missing APP_IMAGE_TAG}"
+    image: "registry.gitlab.com/naturalis/bii/bmd/bmd-dataspace-api:${IMAGE_VERSION:?Missing IMAGE_VERSION}"
     container_name: bmd-dataspace-api
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - "${JENA_DATA_DIR:?Missing JENA_DATA_DIR}:/data/bmd/jena"
+      - "${DATA_DIR:?Missing DATA_DIR}/jena:/data/bmd/jena"
+      - "${DATA_DIR:?Missing DATA_DIR}/log:/data/bmd/log"
+      - "./logback-spring.xml:/logback-spring.xml"
     environment:
       JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:?Missing JAVA_TOOL_OPTIONS}"
     env_file:

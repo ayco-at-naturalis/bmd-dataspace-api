@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # set-image-version.sh
-# Identifies the Docker image to deploy (that is, the Docker image tag)
+# Identifies the Docker image to deploy and writes it to ansible/.image-version.
 
 set -eu
 
@@ -18,8 +18,8 @@ else # Resolve using this script's location
   BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
-# Include functions.sh from build (!) directory
-. "${BASE_DIR}/build/functions.sh"
+source "${BASE_DIR}/build/functions.sh"
+source "${BASE_DIR}/ansible/functions.sh"
 
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/ansible/deploy.env" ]; then
@@ -28,7 +28,7 @@ if ! is_gitlab_pipeline; then
     exit 1
   fi
   # deploy.env might specify a value for IMAGE_VERSION
-  . "${BASE_DIR}/ansible/deploy.env"
+  source "${BASE_DIR}/ansible/deploy.env"
 fi
 
 if ! is_gitlab_pipeline; then
@@ -45,14 +45,13 @@ fi
 if [ -z "${IMAGE_VERSION-}" ]; then
   if [ -n "${CI_COMMIT_TAG-}" ]; then
     IMAGE_VERSION="${CI_COMMIT_TAG}"
-  elif is_merge_commit "${CI_COMMIT_SHA}"; then
-    IMAGE_VERSION="${CI_COMMIT_SHA}"
   else
-    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}"
+    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
   fi
 fi
 
-export IMAGE_VERSION
+mkdir -p "$(dirname "$VERSION_FILE")"
+printf '%s' "$IMAGE_VERSION" > "$VERSION_FILE"
 
 echo "Docker image to be deployed: $CI_REGISTRY_IMAGE:$IMAGE_VERSION"
 echo

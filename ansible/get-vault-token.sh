@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
 # get-vault-token.sh
-# Retrieves an HC Vault token
-
-echo "Retrieving HC Vault token"
+# Retrieves an HC Vault token and saves it to ansible/.vault-token. If that
+# file already already exists and the token inside it is still valid, no new
+# token is requested. The location of the token file (ansible/.vault-token)
+# is stored in variable TOKEN_FILE, which is defined in functions.sh.
 
 set -euo pipefail
+
+echo "Retrieving HC Vault token"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -18,8 +21,6 @@ else # Resolve using this script's location
   BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 fi
 
-source "${BASE_DIR}/ansible/functions.sh"
-
 if ! is_gitlab_pipeline; then
   if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
     echo 'Local builds require presence of deploy.env'
@@ -29,7 +30,7 @@ if ! is_gitlab_pipeline; then
   source "${BASE_DIR}/ansible/deploy.env"
 fi
 
-TOKEN_FILE="${BASE_DIR}/ansible/.vault-token"
+source "${BASE_DIR}/ansible/functions.sh"
 
 if is_gitlab_pipeline; then
   # Rely on variables being set in .gitlab-ci.yml
@@ -59,7 +60,8 @@ if ! curl "$VAULT_SERVER_URL" -m 1 &> /dev/null; then
   exit 1
 fi
 
-ensure_vault_cli # defined in functions.sh
+# Make sure we have the HC Vault client.
+ensure_vault_cli
 
 export VAULT_ADDR="$VAULT_SERVER_URL"
 if [[ -f "${TOKEN_FILE}" ]]; then
@@ -73,7 +75,8 @@ VAULT_TOKEN="$(vault login -method=oidc -token-only)"
 mkdir -p "$(dirname "$TOKEN_FILE")"
 printf '%s' "$VAULT_TOKEN" > "$TOKEN_FILE"
 chmod 600 "$TOKEN_FILE"
-echo "HC Vault token ready to be used"
+echo
+echo "Vault token ready to be used"
 exit 0
 
 

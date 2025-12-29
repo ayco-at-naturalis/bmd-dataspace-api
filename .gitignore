@@ -15,6 +15,7 @@
 
 *.vault-token
 *.image-version
+*.inventory.json
 /ansible/mount/
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/

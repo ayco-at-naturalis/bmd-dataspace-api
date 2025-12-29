@@ -20,16 +20,19 @@ else # Resolve using this script's location
   BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 fi
 
+ANSIBLE_DIR="${BASE_DIR}/ansible"
+INVENTORY_DIR="${ANSIBLE_DIR}/inventory"
+
 if ! is_gitlab_pipeline; then
-  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+  if [[ ! -f "${ANSIBLE_DIR}/deploy.env" ]]; then
     echo 'Local builds require presence of deploy.env'
     echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
     exit 1
   fi
-  source "${BASE_DIR}/ansible/deploy.env"
+  source "${ANSIBLE_DIR}/deploy.env"
 fi
 
-source "${BASE_DIR}/ansible/functions.sh"
+source "${ANSIBLE_DIR}/functions.sh"
 
 : "${VAULT_SERVER_URL:?Missing value for VAULT_SERVER_URL}"
 : "${VAULT_PATH:?Missing value for VAULT_PATH}"
@@ -42,40 +45,41 @@ if [[ ! -f "${TOKEN_FILE}" ]]; then
 fi
 
 echo "---> Deleting old secrets (if any)"
-rm -rf "${BASE_DIR}/ansible/inventory/group_vars" \
-	"${BASE_DIR}/ansible/inventory/host_vars" \
-	"${BASE_DIR}/ansible/secrets"
+rm -rf "${INVENTORY_DIR}/group_vars" \
+	"${INVENTORY_DIR}/host_vars" \
+	"${ANSIBLE_DIR}/ssh"
 
-mkdir -p "${BASE_DIR}/ansible/inventory/group_vars" \
-	"${BASE_DIR}/ansible/inventory/host_vars" \
-	"${BASE_DIR}/ansible/secrets"
+mkdir -p "${INVENTORY_DIR}/group_vars" \
+	"${INVENTORY_DIR}/host_vars" \
+	"${ANSIBLE_DIR}/ssh"
 
 echo "---> Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
 ANSIBLE_GROUPS="$(get_ansible_groups "${DEPLOY_HOST}")"
 echo "---> Host \"${DEPLOY_HOST}\" belongs to these groups: ${ANSIBLE_GROUPS:-(none)}"
 
 # group_vars
-get_secret_as_json 'cicd/group_vars/all' 'ansible/inventory/group_vars/all.json'
+get_secret_as_json "cicd/group_vars/all" "${INVENTORY_DIR}/group_vars/all.json"
 for group in ${ANSIBLE_GROUPS:-}; do
-	get_secret_as_json "cicd/group_vars/${group}" "ansible/inventory/group_vars/${group}.json"
+	get_secret_as_json "cicd/group_vars/${group}" "${INVENTORY_DIR}/group_vars/${group}.json"
 done
 
 # host_vars
-get_secret_as_json "cicd/host_vars/${DEPLOY_HOST}" "ansible/inventory/host_vars/${DEPLOY_HOST}.json"
+get_secret_as_json "cicd/host_vars/${DEPLOY_HOST}" "${INVENTORY_DIR}/host_vars/${DEPLOY_HOST}.json"
 
-# AWS credentials. Note that aws.json matches the name of an Ansible group (aws) in
-# hosts.yml and will therefore be read and exposed automatically by Ansible.
-get_secret_as_json 'tenant/letsencrypt' 'ansible/inventory/group_vars/aws.json'
-FULL_PATH="${BASE_DIR}/ansible/inventory/group_vars/aws.json"
-[[ ! -f "${FULL_PATH}" ]] && echo "ERROR: Missing AWS credentials" >&2 && exit 1
+# AWS credentials. NOTE: aws.json matches the name of an Ansible group (aws) in
+# hosts.yml. Therefore Ansible will read and expose aws.json if it is present in
+# the group_vars directory
+output_file="${INVENTORY_DIR}/group_vars/aws.json"
+get_secret_as_json "tenant/letsencrypt" "${output_file}"
+[[ ! -f "${output_file}" ]] && echo "ERROR: Missing AWS credentials" >&2 && exit 1
 
 # SSH key for Ansible
-get_secret_as_json 'cicd/ssh' 'ansible/secrets/ssh.json'
-FULL_PATH="${BASE_DIR}/ansible/secrets/ssh.json"
-[[ ! -f "${FULL_PATH}" ]] && echo "ERROR: Missing SSH key" >&2 && exit 1
+output_file="${ANSIBLE_DIR}/ssh/ssh.json"
+get_secret_as_json "cicd/ssh" "${output_file}"
+[[ ! -f "${output_file}" ]] && echo "ERROR: Missing SSH key" >&2 && exit 1
 
 # Generate an id_ed25519 file using ssh.json
-ANSIBLE_DEPLOY_KEY="$(jq -e -r ".ANSIBLE_DEPLOY_KEY" "${FULL_PATH}")"
+ANSIBLE_DEPLOY_KEY="$(jq -e -r ".ANSIBLE_DEPLOY_KEY" "${output_file}")"
 [[ -z "${ANSIBLE_DEPLOY_KEY:-}" ]] && echo "ERROR: Unable to read SSH key" >&2 && exit 1
-echo "${ANSIBLE_DEPLOY_KEY}" > "${BASE_DIR}/ansible/secrets/id_ed25519"
-chmod 0400 "${BASE_DIR}/ansible/secrets/id_ed25519"
+echo "${ANSIBLE_DEPLOY_KEY}" > "${ANSIBLE_DIR}/ssh/id_ed25519"
+chmod 0400 "${ANSIBLE_DIR}/ssh/id_ed25519"

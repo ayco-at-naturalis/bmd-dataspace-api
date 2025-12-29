@@ -5,8 +5,6 @@
 
 set -euo pipefail
 
-echo "Retrieving HC Vault token"
-
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
   [ -n "${CI_JOB_ID-}" ]

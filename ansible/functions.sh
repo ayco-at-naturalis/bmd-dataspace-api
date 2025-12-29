@@ -16,6 +16,7 @@ TOKEN_FILE="${ANSIBLE_DIR}/.vault-token"
 # ${ANSIBLE_DIR} (with ${ANSIBLE_DIR} being mapped to /world).
 INVENTORY_FILE=".inventory.json"
 
+
 # Prints a space-separated list of all groups within hosts.yml file to which the specified
 # host belongs (either directly or indirectly). The implicit "all" and "ungrouped" groups
 # are excluded from the list. The printed groups are used to look up identically named
@@ -33,17 +34,6 @@ get_ansible_groups() { # hostname
   return 0
 }
 
-# Reads ${ANSIBLE_DIR}/${INVENTORY_FILE} and applies a jq filter that selects only
-# those Ansible groups that contains the specified host. The jq filter is placed in
-# a separate file
-filter_ansible_groups() { # hostname
-  local hostname="$1"
-  jq --raw-output \
-   --arg hostname "$hostname" \
-   --from-file "${ANSIBLE_DIR}/inventory.jq" \
-   "${ANSIBLE_DIR}/${INVENTORY_FILE}"
-}
-
 # Calls `ansible-inventory --list` and writes the output to ${ANSIBLE_DIR}/${INVENTORY_FILE}.
 list_ansible_groups() {
   docker run --rm \
@@ -53,6 +43,17 @@ list_ansible_groups() {
     -t \
     "${ANSIBLE_DOCKER_IMAGE}" \
     sh -lc "ansible-inventory -i '/hosts.yml' --list > '/world/${INVENTORY_FILE}'"
+}
+
+# Reads ${ANSIBLE_DIR}/${INVENTORY_FILE} and applies a jq filter that selects only
+# those Ansible groups that contains the specified host. The jq filter is placed in
+# a separate file
+filter_ansible_groups() { # hostname
+  local hostname="$1"
+  jq --raw-output \
+   --arg hostname "$hostname" \
+   --from-file "${ANSIBLE_DIR}/inventory.jq" \
+   "${ANSIBLE_DIR}/${INVENTORY_FILE}"
 }
 
 # Determines whether the provided argument is occurs at least once as a
@@ -131,7 +132,7 @@ get_secret_as_json() { # secret_name, output_file
   if [[ $status -eq 200 ]]; then
     # Only write a file if there are keys under .data.data
     if jq -e '.data.data | length > 0' >/dev/null 2>&1 <<< "$body"; then
-      jq '.data.data' <<<"$body" >"${BASE_DIR}/${save_as}"
+      jq '.data.data' <<< "$body" > "${save_as}"
       echo "---> Secret saved"
     else
       echo "---> Empty secret"

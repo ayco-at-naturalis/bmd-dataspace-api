@@ -32,6 +32,7 @@ echo "---> Target host: ${DEPLOY_HOST}"
 "${BASE_DIR}/ansible/get-vault-token.sh"
 "${BASE_DIR}/ansible/pull-vault-secrets.sh"
 "${BASE_DIR}/ansible/set-image-version.sh"
+"${BASE_DIR}/ansible/playbook.sh"
 
 echo 'Executing Ansible playbook ...'
 source "${BASE_DIR}/ansible/playbook.sh"

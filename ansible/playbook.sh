@@ -1,5 +1,29 @@
 #!/bin/bash
 
+set -euo pipefail
+
+echo "Executing deployment playbook"
+
+# Are we running inside a GitLab pipeline?
+is_gitlab_pipeline() {
+ [ -n "${CI_JOB_ID-}" ]
+}
+
+if is_gitlab_pipeline; then
+  BASE_DIR="${CI_PROJECT_DIR}"
+else # Resolve using this script's location
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
+fi
+
+if ! is_gitlab_pipeline; then
+  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+    echo 'Local builds require presence of deploy.env'
+    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
+    exit 1
+  fi
+  source "${BASE_DIR}/ansible/deploy.env"
+fi
+
 docker run \
     -v "${BASE_DIR}/:/runner/" \
     -v "${BASE_DIR}/ansible/ssh/:/root/.ssh" \

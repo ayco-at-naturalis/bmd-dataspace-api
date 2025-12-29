@@ -15,7 +15,7 @@ is_gitlab_pipeline() {
 if is_gitlab_pipeline; then
   BASE_DIR="${CI_PROJECT_DIR}"
 else # Resolve using this script's location
-  BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 fi
 
 source "${BASE_DIR}/build/functions.sh"
@@ -54,6 +54,13 @@ fi
 
 mkdir -p "$(dirname "$VERSION_FILE")"
 printf '%s' "$IMAGE_VERSION" > "$VERSION_FILE"
+
+if ! image_tag_exists "$IMAGE_VERSION"; then
+  echo "Image tag \"$IMAGE_VERSION\" not found in container registry" >&2
+  echo "You probably did a local commit, but did not rebuild the container" >&2
+  echo "image afterwards" >&2
+  exit 1
+fi
 
 echo "Docker image to be deployed: $CI_REGISTRY_IMAGE:$IMAGE_VERSION"
 echo

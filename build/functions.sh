@@ -47,3 +47,18 @@ _to_slug() {
   slug=$(printf '%s\n' "$slug" | sed 's/-*$//')
   printf '%s\n' "$slug"
 }
+
+is_valid_image_tag() { # tag
+  if [ $# -ne 1 ]; then
+    echo "USAGE: is_valid_image_tag <tag>" >&2
+    exit 1
+  fi
+  tag="$1"
+  echo "Verifying presence of tag \"$tag\" in container registry"
+  # Left-chop "registry.gitlab.com" from ${CI_REGISTRY_IMAGE}:
+  image_path="${CI_REGISTRY_IMAGE#"${CI_REGISTRY}"/}"
+  url="https://${CI_REGISTRY}/v2/${image_path}/manifests/${tag}"
+  header="Accept: application/vnd.docker.distribution.manifest.v2+json"
+  curl -fsI -H "$header" "$url" > /dev/null
+}
+

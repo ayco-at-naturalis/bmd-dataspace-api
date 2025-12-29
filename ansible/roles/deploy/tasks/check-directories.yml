@@ -1,0 +1,27 @@
+---
+# Verify presence of required direcotries on remote host. Create
+# them if absent.
+
+- name: "Ensure presence of {{ deploy_dir }}"
+  ansible.builtin.file:
+    path: "{{ deploy_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: "Ensure presence of {{ data_dir }}"
+  ansible.builtin.file:
+    path: "{{ data_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: "Ensure presence of {{ data_dir }}/jena"
+  ansible.builtin.file:
+    path: "{{ data_dir }}/jena"
+    state: directory
+    mode: "0755"
+
+- name: "Ensure presence of {{ data_dir }}/log"
+  ansible.builtin.file:
+    path: "{{ data_dir }}/log"
+    state: directory
+    mode: "0755"

@@ -1,59 +1,41 @@
 #!/bin/bash
 
-# Driver script for the Ansible deployment. START HERE.
+# Orchestrates the deployment. Calls the other shell scripts in
+# the proper order.
 
-set -u
+set -euo pipefail
 
-# Are we running inside a Gitlab pipeline?
-GITLAB_PIPELINE=true
-[[ -z ${CI_JOB_ID+x} ]] && GITLAB_PIPELINE=false
-export GITLAB_PIPELINE
+echo "Retrieving HC Vault token"
 
-if [[ ${GITLAB_PIPELINE} = true ]]; then
+# Are we running inside a GitLab pipeline?
+is_gitlab_pipeline() {
+  [ -n "${CI_JOB_ID-}" ]
+}
+
+if is_gitlab_pipeline; then
   BASE_DIR="${CI_PROJECT_DIR}"
-else
-  BASE_DIR=$(dirname "${0}")/../
-  BASE_DIR=$(realpath "${BASE_DIR}")
+else # Resolve using this script's location
+  BASE_DIR=$(cd "$(dirname "$0")/.." && pwd)
 fi
-export BASE_DIR
 
-if [[ ${GITLAB_PIPELINE} = false ]]; then
-  f="${BASE_DIR}/ansible/deploy.env"
-  if [[ ! -f "${f}" ]]; then
-    echo 'For locally executed deployments, the following file is required:'
-    echo 'ansible/deploy.env. This file will now be created. Edit the file'
-    echo 'and then run deploy.sh again'
-    source "${BASE_DIR}/ansible/create_deploy_env.sh"
+if ! is_gitlab_pipeline; then
+  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+    echo 'Local builds require presence of deploy.env'
+    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
     exit 1
   fi
-  echo 'Setting up local environment for locally executed deployment ...'
-  source "${f}"
-  read -p "You will be deploying to \"${ANSIBLE_HOSTS}\". Continue? [Y/n] " ok
-  if [[ ! -z "${ok}" && "${ok}" != 'Y' ]]; then
-    echo 'Aborting deployment'
-    exit 1
-  fi
+  source "${BASE_DIR}/ansible/deploy.env"
 fi
 
-echo 'Reading secrets ...'
-source "${BASE_DIR}/ansible/pull_vault_secrets.sh"
-if [[ ${?} -ne 0 ]]; then
-  exit 1
-fi
+echo
+echo "Starting deployment"
+echo "---> Target host: ${DEPLOY_HOST}"
 
-echo 'Determining image version ...'
-source "${BASE_DIR}/ansible/export_image_version.sh"
-echo "About to deploy version \"${IMAGE_VERSION}\""
+"${BASE_DIR}/ansible/get-vault-token.sh"
+"${BASE_DIR}/ansible/pull-vault-secrets.sh"
+"${BASE_DIR}/ansible/set-image-version.sh"
 
 echo 'Executing Ansible playbook ...'
-if [[ ${GITLAB_PIPELINE} == false ]]; then
-  if [[ -z "$(which ansible-galaxy)" ]]; then
-    echo 'ansible-galaxy not installed; must be present for locally executed deployments'
-    exit 1
-  fi
-  echo 'Installing extra Ansible roles ...'
-  ansible-galaxy role install --force -r requirements.yml
-fi
 source "${BASE_DIR}/ansible/playbook.sh"
 
 echo 'Deleting secrets ...'

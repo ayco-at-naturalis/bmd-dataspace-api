@@ -41,11 +41,16 @@ if [[ ! -f "${TOKEN_FILE}" ]]; then
 	exit 1
 fi
 
+echo "---> Deleting old secrets (if any)"
+rm -rf "${BASE_DIR}/ansible/inventory/group_vars" \
+	"${BASE_DIR}/ansible/inventory/host_vars" \
+	"${BASE_DIR}/ansible/secrets"
+
 mkdir -p "${BASE_DIR}/ansible/inventory/group_vars" \
 	"${BASE_DIR}/ansible/inventory/host_vars" \
 	"${BASE_DIR}/ansible/secrets"
 
-echo "Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
+echo "---> Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
 ANSIBLE_GROUPS="$(get_ansible_groups "${DEPLOY_HOST}")"
 echo "---> Host \"${DEPLOY_HOST}\" belongs to these groups: ${ANSIBLE_GROUPS:-(none)}"
 
@@ -58,9 +63,10 @@ done
 # host_vars
 get_secret_as_json "cicd/host_vars/${DEPLOY_HOST}" "ansible/inventory/host_vars/${DEPLOY_HOST}.json"
 
-# AWS credentials
-get_secret_as_json 'tenant/letsencrypt' 'ansible/inventory/host_vars/aws.json'
-FULL_PATH="${BASE_DIR}/ansible/inventory/host_vars/aws.json"
+# AWS credentials. Note that aws.json matches the name of an Ansible group (aws) in
+# hosts.yml and will therefore be read and exposed automatically by Ansible.
+get_secret_as_json 'tenant/letsencrypt' 'ansible/inventory/group_vars/aws.json'
+FULL_PATH="${BASE_DIR}/ansible/inventory/group_vars/aws.json"
 [[ ! -f "${FULL_PATH}" ]] && echo "ERROR: Missing AWS credentials" >&2 && exit 1
 
 # SSH key for Ansible

@@ -1,0 +1,17 @@
+---
+# Identity knob
+compose_project_name: "bmd-dataspace-api"
+
+# Derived locations (override if needed)
+deploy_dir: "/opt/projects/{{ compose_project_name }}"
+data_dir: "/data/{{ compose_project_name }}"
+
+# Repo root relative to ansible/ (playbook_dir points at ansible/)
+repo_root: "{{ playbook_dir }}/.."
+
+# Lists all files that must be pushed to the remote host
+deployed_files:
+  - "docker-compose.yml"
+  - "docker-compose.traefik.yml"
+  - "logback-spring.xml"
+

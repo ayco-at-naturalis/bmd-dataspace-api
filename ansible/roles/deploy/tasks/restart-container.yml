@@ -1,0 +1,23 @@
+---
+- name: docker compose pull
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -p {{ compose_project_name }}
+      -f docker-compose.yml 
+      -f docker-compose.traefik.yml 
+      pull
+  args:
+    chdir: "{{ deploy_dir }}"
+  changed_when: true
+
+- name: docker compose up
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -f docker-compose.yml
+      -f docker-compose.traefik.yml 
+      up -d --remove-orphans
+  args:
+    chdir: "{{ deploy_dir }}"
+  changed_when: true

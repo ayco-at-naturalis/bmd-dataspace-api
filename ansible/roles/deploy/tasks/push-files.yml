@@ -1,0 +1,7 @@
+---
+- name: "Push docker-compose.yml & friends to remote host"
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/{{ item }}"
+    dest: "{{ deploy_dir }}/{{ item }}"
+    mode: "0644"
+  loop: "{{ deployed_files }}"

@@ -21,6 +21,8 @@ fi
 source "${BASE_DIR}/build/functions.sh"
 source "${BASE_DIR}/ansible/functions.sh"
 
+VERSION_FILE="${BASE_DIR}/ansible/.image-version"
+
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/ansible/deploy.env" ]; then
     echo 'Locally executed deployments require presence of deploy.env'

@@ -12,5 +12,5 @@ docker run \
     -t \
     registry.gitlab.com/naturalis/lib/ansible/docker-ansible:latest ansible-playbook \
     -i "ansible/inventory/hosts.yml" \
-    -l "${ANSIBLE_HOSTS}" \
+    -l "${ANSIBLE_HOST}" \
     ansible/deploy.yml

@@ -1,0 +1,18 @@
+---
+# Execute checks on control machine
+
+# Ensure presence of all files that we want to push to remote host.
+# repo_root and deployed_files are defined in ../defaults/main.yml.
+# Change the set of files to be pushed there.
+- name: Check presence of required files on control machine
+  ansible.builtin.stat:
+    path: "{{ repo_root }}/{{ item }}"
+  loop: "{{ deployed_files }}"
+  delegate_to: localhost
+  register: compose_stats
+
+- name: Fail if any required file on control machine is missing
+  ansible.builtin.assert:
+    that:
+      - (compose_stats.results | map(attribute='stat.exists') | min)
+    fail_msg: "One or more files are missing under {{ repo_root }}: {{ deployed_files }}"

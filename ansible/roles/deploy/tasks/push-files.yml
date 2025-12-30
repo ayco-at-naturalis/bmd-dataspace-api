@@ -4,4 +4,13 @@
     src: "{{ repo_root }}/{{ item }}"
     dest: "{{ deploy_dir }}/{{ item }}"
     mode: "0644"
+  # deployed_files is defined in ansible/roles/deploy/defaults/main.yml
   loop: "{{ deployed_files }}"
+
+- name: "Push executables to remote host"
+  ansible.builtin.copy:
+    src: "{{ repo_root }}/{{ item }}"
+    dest: "{{ deploy_dir }}/{{ item }}"
+    mode: "0744"
+  # executable_files is defined in ansible/roles/deploy/defaults/main.yml
+  loop: "{{ deployed_executables }}"

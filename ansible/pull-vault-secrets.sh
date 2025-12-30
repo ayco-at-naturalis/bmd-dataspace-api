@@ -40,7 +40,8 @@ source "${ANSIBLE_DIR}/functions.sh"
 
 # TOKEN_FILE is defined in functions.sh
 if [[ ! -f "${TOKEN_FILE}" ]]; then
-	echo "Vault token not generated. Check get-vault-token.sh" >&2
+	echo "Missing ${TOKEN_FILE}" >&2
+	echo "Run get-vault-roken.sh first" >&2
 	exit 1
 fi
 

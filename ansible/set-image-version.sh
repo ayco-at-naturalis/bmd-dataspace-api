@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # set-image-version.sh
-# Identifies the Docker image to deploy and writes it to ansible/.image-version.
+# Identifies the tag of the Docker image to be deployed and writes it to
+# ansible/.image-version.
 
 set -eu
 
@@ -21,8 +22,6 @@ fi
 source "${BASE_DIR}/build/functions.sh"
 source "${BASE_DIR}/ansible/functions.sh"
 
-VERSION_FILE="${BASE_DIR}/ansible/.image-version"
-
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/ansible/deploy.env" ]; then
     echo 'Locally executed deployments require presence of deploy.env'
@@ -39,11 +38,11 @@ if ! is_gitlab_pipeline; then
   CI_COMMIT_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
 fi
 
-# Only auto-compute Docker image version if it is not set yet
-# in the environment. Allow IMAGE_VERSION to be set ad hoc in
-# o .gitlab-ci.yml
-# o as a pipeline variable
-# o in deploy.env
+# Only auto-compute IMAGE_VERSION if it is not set already in
+# the environment. Allow IMAGE_VERSION to be set (ad hoc) in:
+#   - .gitlab-ci.yml
+#   - as a pipeline variable
+#   - in deploy.env
 if [ -z "${IMAGE_VERSION-}" ]; then
   if [ -n "${CI_COMMIT_TAG-}" ]; then
     IMAGE_VERSION="${CI_COMMIT_TAG}"
@@ -52,15 +51,5 @@ if [ -z "${IMAGE_VERSION-}" ]; then
   fi
 fi
 
-mkdir -p "$(dirname "$VERSION_FILE")"
+mkdir -p "$(dirname "$VERSION_FILE")" # VERSION_FILE is defined in ansible/functions.sh
 printf '%s' "$IMAGE_VERSION" > "$VERSION_FILE"
-
-if ! image_tag_exists "$IMAGE_VERSION"; then
-  echo "Image tag \"$IMAGE_VERSION\" not found in container registry" >&2
-  echo "You probably did a local commit, but did not rebuild the container" >&2
-  echo "image afterwards" >&2
-  exit 1
-fi
-
-echo "Docker image to be deployed: $CI_REGISTRY_IMAGE:$IMAGE_VERSION"
-echo

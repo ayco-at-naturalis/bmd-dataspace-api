@@ -2,6 +2,7 @@ services:
 
   traefik:
     image: registry.gitlab.com/naturalis/lib/docker/traefik:latest
+    container_name: bmd-dataspace-traefik
     restart: unless-stopped
     depends_on:
       - docker-socket-proxy
@@ -37,6 +38,7 @@ services:
 
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:0.1.1
+    container_name: bmd-dataspace-docker-proxy
     restart: unless-stopped
     networks:
       - docker-socket-proxy

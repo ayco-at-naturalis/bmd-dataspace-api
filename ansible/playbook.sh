@@ -24,6 +24,25 @@ if ! is_gitlab_pipeline; then
   source "${BASE_DIR}/ansible/deploy.env"
 fi
 
+source "${BASE_DIR}/build/functions.sh"
+source "${BASE_DIR}/ansible/functions.sh"
+
+# VERSION_FILE is defined in ansible/functions.sh
+if [ ! -f "${VERSION_FILE}" ]; then
+  echo "Missing ${VERSION_FILE}" >&2
+  echo "Run set-image-version.sh first" >&2
+  exit 1
+fi
+
+IMAGE_VERSION="$(<"${VERSION_FILE}")"
+
+if ! is_valid_image_tag "$IMAGE_VERSION"; then
+  echo "Image tag \"$IMAGE_VERSION\" not found in container registry" >&2
+  echo "You probably did a local commit, but did not build an image for it" >&2
+  echo "Run create-image.sh and/or tag-image.sh first" >&2
+  exit 1
+fi
+
 docker run \
     -v "${BASE_DIR}/:/runner/" \
     -v "${BASE_DIR}/ansible/ssh/:/root/.ssh" \

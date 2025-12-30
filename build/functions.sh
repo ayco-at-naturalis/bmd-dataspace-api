@@ -55,10 +55,11 @@ is_valid_image_tag() { # tag
   fi
   tag="$1"
   echo "Verifying presence of tag \"$tag\" in container registry"
-  # Left-chop "registry.gitlab.com" from ${CI_REGISTRY_IMAGE}:
-  image_path="${CI_REGISTRY_IMAGE#"${CI_REGISTRY}"/}"
-  url="https://${CI_REGISTRY}/v2/${image_path}/manifests/${tag}"
-  header="Accept: application/vnd.docker.distribution.manifest.v2+json"
-  curl -fsI -H "$header" "$url" > /dev/null
+  echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+  if docker manifest inspect "${CI_REGISTRY_IMAGE}:${tag}" >/dev/null 2>&1; then
+    return 0
+  else
+    return 1
+  fi
 }
 

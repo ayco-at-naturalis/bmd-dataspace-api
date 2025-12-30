@@ -6,12 +6,20 @@ compose_project_name: "bmd-dataspace-api"
 deploy_dir: "/opt/projects/{{ compose_project_name }}"
 data_dir: "/data/{{ compose_project_name }}"
 
-# Repo root relative to ansible/ (playbook_dir points at ansible/)
+# Repo root relative to playbook_dir. playbook_dir is a magic variable
+# that points to the directory from which the playbook is run. In our
+# case, playbook.sh (which executes the ansible-playbook command) is
+# located in the ansible directory.
 repo_root: "{{ playbook_dir }}/.."
 
-# Lists all files that must be pushed to the remote host
+# Lists all files, relativer to the repository's root directory, that
+# must be pushed to the remote host
 deployed_files:
   - "docker-compose.yml"
   - "docker-compose.traefik.yml"
   - "logback-spring.xml"
+
+# Lists all shell scripts and other executable that must be pushed
+deployed_executables:
+  - "docker-blowtorch.sh"
 

@@ -54,12 +54,19 @@ is_valid_image_tag() { # tag
     exit 1
   fi
   tag="$1"
-  echo "Verifying presence of tag \"$tag\" in container registry"
-  echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
+  echo "---> Searching for tag \"$tag\" in container registry"
+  docker_login
   if docker manifest inspect "${CI_REGISTRY_IMAGE}:${tag}" >/dev/null 2>&1; then
+    echo "---> Tag found"
     return 0
   else
+    echo "---> No such tag"
     return 1
   fi
+}
+
+docker_login() {
+  echo "---> Executing docker login"
+  echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
 }
 

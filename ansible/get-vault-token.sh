@@ -52,8 +52,7 @@ if is_gitlab_pipeline; then
 fi
 
 # Rely on variables being set in deploy.env
-echo "---> MAKE SURE EduVPN IS ACTIVE!"
-echo "---> Local deployments may require you to login via Azure AD and use your 2F app"
+echo "---> MAKE SURE EduVPN IS ACTIVE AND YOU ARE LOGGED INTO YOUR AZURE AD ACCOUNT!"
 
 if ! curl "$VAULT_SERVER_URL" -m 1 &> /dev/null; then
   echo 'Failed to retrieve vault token. HC Vault not reachable' >&2

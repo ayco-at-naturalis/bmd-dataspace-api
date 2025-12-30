@@ -128,14 +128,17 @@ get_secret_as_json() { # secret_name, output_file
 
 }
 
-# Ensures HC vault CLI is available. While you can use Hashicorp's Docker image to
-# retrieve HC Vault secrets, using it to retrieve a vault token is almost impossible
-# unless you print an extended warning beforehand about what might happen (having to
-# log in via Azure AD and have your 2F app ready). Therefore, if the user has not
-# already installed the CLI already, we install it in the .tools directory (git ignored)
-# of this repository.
+# Ensures HC vault CLI is available. You can use Hashicorp's Docker image to retrieve
+# secrets. In theory you can also use it to get a vault token, but in practice it's
+# almost impossible. When your vault token is expired, the CLI will automatically open
+# a browser tab, allowing you to request a new token. Since this processed is
+# supervised by Azure AD, the token is always granted (unless you need it log into
+# Azure AD itself again). So while vault token retrieval is, strictly speaking, not a
+# headless process, in practice it almost always is. (You may just notice a new tab
+# in your browser once get-vault-token.sh completes.) When running the CLI from within
+# a Docker container, all this becomes much more problematic.
 ensure_vault_cli() {
-  if command -v vault >/dev/null 2>&1; then # already installed
+  if command -v vault > /dev/null 2>&1; then # already installed
     return 0
   fi
   local version="${VAULT_CLI_VERSION:?Missing value for VAULT_CLI_VERSION}"

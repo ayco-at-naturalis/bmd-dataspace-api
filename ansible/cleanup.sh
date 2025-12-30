@@ -6,8 +6,6 @@
 
 set -euo pipefail
 
-echo "Performing cleanup"
-
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
   [ -n "${CI_JOB_ID-}" ]

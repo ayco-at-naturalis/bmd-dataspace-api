@@ -29,17 +29,14 @@ echo
 echo "Starting deployment"
 echo "---> Target host: ${DEPLOY_HOST}"
 
+echo "---> Performing pre-deployment cleanup"
+"${BASE_DIR}/ansible/cleanup.sh"
+trap '"${BASE_DIR}/ansible/cleanup.sh"' EXIT
 "${BASE_DIR}/ansible/get-vault-token.sh"
 "${BASE_DIR}/ansible/pull-vault-secrets.sh"
 "${BASE_DIR}/ansible/set-image-version.sh"
 "${BASE_DIR}/ansible/playbook.sh"
+echo "---> Performing post-deployment cleanup"
+"${BASE_DIR}/ansible/cleanup.sh"
 
-echo 'Executing Ansible playbook ...'
-source "${BASE_DIR}/ansible/playbook.sh"
-
-echo 'Deleting secrets ...'
-# These directories are git-ignored, but let's delete them anyway.
-rm -rf "${BASE_DIR}/ansible/inventory/group_vars"
-rm -rf "${BASE_DIR}/ansible/inventory/host_vars"
-rm -rf "${BASE_DIR}/ansible/secrets"
 echo 'Done'

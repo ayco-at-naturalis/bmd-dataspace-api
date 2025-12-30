@@ -32,6 +32,7 @@ fi
 if ! is_gitlab_pipeline; then
   CI_COMMIT_REF_SLUG="$(get_commit_ref_slug)" # defined in functions.sh
   CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
+  "${BASE_DIR}/ansible/cleanup.sh"
 fi
 
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""

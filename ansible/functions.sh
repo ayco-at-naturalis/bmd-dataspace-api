@@ -128,35 +128,73 @@ get_secret_as_json() { # secret_name, output_file
 
 }
 
-# Ensures HC vault CLI is available. You can use Hashicorp's Docker image to retrieve
-# secrets. In theory you can also use it to get a vault token, but in practice it's
-# almost impossible. When your vault token is expired, the CLI will automatically open
-# a browser tab, allowing you to request a new token. Since this processed is
-# supervised by Azure AD, the token is always granted (unless you need it log into
-# Azure AD itself again). So while vault token retrieval is, strictly speaking, not a
-# headless process, in practice it almost always is. (You may just notice a new tab
-# in your browser once get-vault-token.sh completes.) When running the CLI from within
-# a Docker container, all this becomes much more problematic.
+# Ensures HC vault CLI is available. If not, installs it silently in the .tools
+# directory (git-ignored) of this repo.
+#
+# You can use Hashicorp's Docker image to retrieve secrets. In theory you can also use
+# it to get a vault token, but in practice it's almost impossible. When your vault
+# token is expired, the CLI will automatically open a browser tab, allowing you to
+# request a new token. Since this processed is supervised by Azure AD, the token is
+# always granted immediately (unless you need it sign in to Azure AD itself again). So
+# while vault token retrieval is not strictly speaking a headless process, in practice
+# it almost always is. (You may just notice a new tab in your browser once
+# get-vault-token.sh completes.) When running the CLI from within a Docker container,
+# all this becomes much more problematic.
 ensure_vault_cli() {
-  if command -v vault > /dev/null 2>&1; then # already installed
+  if command -v vault > /dev/null 2>&1; then # already installed by user
     return 0
   fi
-  local version="${VAULT_CLI_VERSION:?Missing value for VAULT_CLI_VERSION}"
-  local os="linux"
-  local arch="amd64"
-  local tools_dir="${BASE_DIR}/.tools/vault/${version}"
-  local vault_bin="${tools_dir}/vault"
-  local zip_name="vault_${version}_${os}_${arch}.zip"
-  local zip_path="${tools_dir}/${zip_name}"
-  mkdir -p "$tools_dir"
-  echo "---> Bootstrapping HC Vault CLI from $tools_dir"
-  if [[ ! -x "$vault_bin" ]]; then
-    # Download
-    curl -fsSL -o "$zip_path" "https://releases.hashicorp.com/vault/${version}/${zip_name}"
-    # Unzip
-    (cd "$tools_dir" && unzip -o "$zip_name" >/dev/null)
-    chmod +x "$vault_bin"
+  : "${VAULT_CLI_DOWNLOAD_URL:?Missing value for VAULT_CLI_DOWNLOAD_URL}"
+  vault_dir="${BASE_DIR}/.tools/vault"
+  if [ -d "$vault_dir" ]; then # already installed by ensure_vault_cli
+    PATH="${vault_dir}:$PATH"
+    export PATH
+    return 0
   fi
-  export PATH="${tools_dir}:$PATH"
+  mkdir -p "$vault_dir"
+  # From here onward, if anything goes wrong, delete $vault_dir again, so
+  # next time we will at least try again.
+  trap 'rc=$?; if [ $rc -ne 0 ]; then rm -rf "$vault_dir"; fi; exit $rc' 0 INT TERM HUP
+  echo "---> Bootstrapping HC Vault CLI from $vault_dir"
+  url="$VAULT_CLI_DOWNLOAD_URL"
+  zip_name="${url##*/}"
+  zip_path="${vault_dir}/${zip_name}"
+  vault_bin="${vault_dir}/vault"
+  curl -fsSL -o "$zip_path" "$url"
+  (cd "$vault_dir" && unzip -o "$zip_name" > /dev/null)
+  chmod +x "$vault_bin"
+  PATH="${vault_dir}:$PATH"
+  export PATH
+  # On success, disable trap (we don't want $vault_dir to disappear if user
+  # exits terminal or does a Control-C)
+  trap - 0 INT TERM HUP
+}
+
+# Ensures jq is available. If not, installs it silently in the .tools directory
+# (git-ignored) of this repo.
+ensure_jq() {
+  if command -v jq > /dev/null 2>&1; then # already installed
+    return 0
+  fi
+  : "${JQ_DOWNLOAD_URL:?Missing value for JQ_DOWNLOAD_URL}"
+  jq_dir="${BASE_DIR}/.tools/jq"
+  if [ -d "$jq_dir" ]; then # already installed by ensure_jq
+    PATH="${jq_dir}:$PATH"
+    export PATH
+    return 0
+  fi
+  mkdir -p "$jq_dir"
+  trap 'rc=$?; if [ $rc -ne 0 ]; then rm -rf "$jq_dir"; fi; exit $rc' 0 INT TERM HUP
+  echo "---> Bootstrapping jq from $jq_dir"
+  url="$JQ_DOWNLOAD_URL"
+  dl_name="${url##*/}"
+  dl_path="${jq_dir}/${dl_name}"
+  jq_bin="${jq_dir}/jq"
+  curl -fsSL -o "$dl_path" "$url"
+  chmod +x "$dl_path"
+  mv "$dl_path" "$jq_bin"
+  PATH="${jq_dir}:$PATH"
+  export PATH
+  trap - 0 INT TERM HUP
 }
 

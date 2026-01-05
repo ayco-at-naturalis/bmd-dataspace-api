@@ -1,18 +1,42 @@
 ---
-# Execute checks on control machine
+# Execute prelimnary checks
 
-# Ensure presence of all files that we want to push to remote host.
-# repo_root and deployed_files are defined in ../defaults/main.yml.
-# Change the set of files to be pushed there.
-- name: Check presence of required files on control machine
+- name: Verify docker is installed and in PATH
+  ansible.builtin.command: command -v docker
+  register: docker_check
+  changed_when: false
+  failed_when: docker_check.rc != 0
+
+- name: Fail if docker is not installed
+  ansible.builtin.fail:
+    msg: "Docker is not installed or not available in PATH on this host."
+  when: docker_check.rc != 0
+
+# NB this check is done on the control machine (not the remote host)!
+- name: Very presence of required files
   ansible.builtin.stat:
     path: "{{ repo_root }}/{{ item }}"
   loop: "{{ deployed_files }}"
   delegate_to: localhost
-  register: compose_stats
+  register: file_stats
 
-- name: Fail if any required file on control machine is missing
+- name: Fail if required file is missing
   ansible.builtin.assert:
     that:
-      - (compose_stats.results | map(attribute='stat.exists') | min)
+      - (file_stats.results | map(attribute='stat.exists') | min)
     fail_msg: "One or more files are missing under {{ repo_root }}: {{ deployed_files }}"
+
+# NB this check is done on the control machine (not the remote host)!
+- name: Very presence of required shell scripts
+  ansible.builtin.stat:
+    path: "{{ repo_root }}/{{ item }}"
+  loop: "{{ deployed_executables }}"
+  delegate_to: localhost
+  register: exe_stats
+
+- name: Fail if required shell script is missing
+  ansible.builtin.assert:
+    that:
+      - (exe_stats.results | map(attribute='stat.exists') | min)
+    fail_msg: "One or more shell scripts / executables are missing under {{ repo_root }}: {{ deployed_executables }}"
+

@@ -208,6 +208,10 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <!--
+                            The application jar itself will be copied to a separate directory (build/app),
+                            together with resources like version-info.json.
+                        -->
                         <id>copy-artifact</id>
                         <phase>install</phase>
                         <goals>

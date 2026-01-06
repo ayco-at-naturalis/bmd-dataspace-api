@@ -35,9 +35,14 @@ if ! is_gitlab_pipeline; then
   CI_COMMIT_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
 fi
 
-echo "Generating .version-info.json"
+echo "Generating version-info.json"
 
-OUTPUT_FILE="${BASE_DIR}/build/app/.version-info.json"
+if [ ! -d "${BASE_DIR}/build/app" ]; then
+  echo "Missing directory build/app. Run mvn-install.sh first" >&2
+  exit 1
+fi
+
+OUTPUT_FILE="${BASE_DIR}/build/app/version-info.json"
 BRANCH="${CI_COMMIT_REF_NAME:-unknown}"
 VERSION="${CI_COMMIT_TAG:-${BRANCH}}"
 COMMIT="${CI_COMMIT_SHORT_SHA:-unknown}"
@@ -61,5 +66,5 @@ EOF
 cat "${OUTPUT_FILE}"
 
 echo
-echo "---> .version-info.json generated successfully"
+echo "---> version-info.json generated successfully"
 echo

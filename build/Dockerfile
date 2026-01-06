@@ -11,11 +11,15 @@ RUN mkdir -p \
 # Third-party dependencies only (relatively stable layer)
 COPY dependencies/ /opt/classpath/
 
-# App artifacts (small, changes often)
+# Application artifacts, including app.jar itself (small, changes often)
 COPY app/ /opt/app/
 
 ENTRYPOINT ["java"]
+
+# NOTE: We must add both /opt/app/ and /opt/app/* to the classpath! /opt/app/
+#       ensures that version-info.json will be picked using Class::getResource.
+#       /opt/app/* tells the JVM als jar files in there count as class path items.
 CMD [ "-Dfile.encoding=UTF-8", \
       "-Dlogging.config=/logback-spring.xml", \
-      "-cp", "/opt/classpath/*:/opt/app/*", \
+      "-cp", "/opt/classpath/*:/opt/app/:/opt/app/*", \
       "eu.bmdproject.dataspace.BmdDataspaceApiApplication" ]

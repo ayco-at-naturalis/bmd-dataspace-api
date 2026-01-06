@@ -71,3 +71,11 @@ fi
 echo
 echo "---> Image tags successfully added"
 echo
+
+if ! is_gitlab_pipeline && is_repository_dirty; then
+  echo
+  echo "********************************************************"
+  echo "** WARNING: You are building from a dirty repository! **"
+  echo "********************************************************"
+  echo
+fi

@@ -57,3 +57,12 @@ docker run \
     -i "ansible/inventory/hosts.yml" \
     -l "${DEPLOY_HOST}" \
     ansible/deploy.yml
+
+
+if ! is_gitlab_pipeline && is_repository_dirty; then
+  echo
+  echo "*********************************************************"
+  echo "** WARNING: You are deploying from a dirty repository! **"
+  echo "*********************************************************"
+  echo
+fi

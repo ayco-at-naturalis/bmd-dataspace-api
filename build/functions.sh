@@ -65,6 +65,11 @@ is_valid_image_tag() { # tag
   fi
 }
 
+is_repository_dirty() {
+  test -z "$(git status --porcelain)" && return 1
+  return 0;
+}
+
 docker_login() {
   echo "---> Executing docker login"
   echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"

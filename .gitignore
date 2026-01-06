@@ -9,7 +9,9 @@
 
 /public/
 /target/
+
 /build/dependencies/
+/build/app/
 /build/mvn-repo/
 /build/kaniko/
 

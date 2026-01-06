@@ -2,7 +2,7 @@
 # Execute prelimnary checks
 
 - name: Verify docker is installed and in PATH
-  ansible.builtin.command: command -v docker
+  ansible.builtin.shell: "command -v docker"
   register: docker_check
   changed_when: false
   failed_when: docker_check.rc != 0

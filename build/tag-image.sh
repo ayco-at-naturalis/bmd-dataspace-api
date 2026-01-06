@@ -69,3 +69,5 @@ if [[ "${CI_COMMIT_REF_SLUG}" = "main" ]]; then
 fi
 
 echo
+echo "---> Image tags successfully added"
+echo

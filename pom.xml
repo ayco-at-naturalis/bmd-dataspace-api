@@ -161,7 +161,13 @@
                         <fileset>
                             <directory>${project.basedir}/build/dependencies</directory>
                             <includes>
-                                <include>**/*.jar</include>
+                                <include>**/*</include>
+                            </includes>
+                        </fileset>
+                        <fileset>
+                            <directory>${project.basedir}/build/app</directory>
+                            <includes>
+                                <include>**/*</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -197,6 +203,7 @@
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
+                            <outputDirectory>${project.basedir}/build/dependencies</outputDirectory>
                             <silent>true</silent>
                         </configuration>
                     </execution>
@@ -207,12 +214,14 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
+                            <outputDirectory>${project.basedir}/build/app</outputDirectory>
                             <artifactItems>
                                 <artifactItem>
                                     <groupId>${project.groupId}</groupId>
                                     <artifactId>${project.artifactId}</artifactId>
                                     <version>${project.version}</version>
                                     <type>jar</type>
+                                    <destFileName>app.jar</destFileName>
                                     <overWrite>true</overWrite>
                                 </artifactItem>
                             </artifactItems>

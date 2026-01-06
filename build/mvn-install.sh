@@ -22,9 +22,11 @@ if [[ ! -d "${BASE_DIR}/build/mvn-repo" ]]; then
   mkdir "${BASE_DIR}/build/mvn-repo"
 fi
 
-echo '---> Creating Java classpath directory'
+echo '---> Creating Java classpath directories'
 rm -rf "${BASE_DIR}/build/dependencies"
+rm -rf "${BASE_DIR}/build/app"
 mkdir "${BASE_DIR}/build/dependencies"
+mkdir "${BASE_DIR}/build/app"
 
 echo '---> Starting build'
 run_maven clean install

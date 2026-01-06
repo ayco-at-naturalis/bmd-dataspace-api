@@ -39,7 +39,7 @@ IMAGE_VERSION="$(<"${VERSION_FILE}")"
 if ! is_valid_image_tag "$IMAGE_VERSION"; then
   echo "Image tag \"$IMAGE_VERSION\" not found in container registry" >&2
   echo "You probably did a local commit, but did not build an image for it" >&2
-  echo "Run create-image.sh and/or tag-image.sh first" >&2
+  echo "Run build.sh first" >&2
   exit 1
 fi
 

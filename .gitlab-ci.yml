@@ -69,6 +69,7 @@ maven_build:
     expire_in: 3 days
     paths:
       - build/dependencies
+      - build/app
 
 create_image:
   stage: "Create Image"

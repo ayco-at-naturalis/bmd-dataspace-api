@@ -1,11 +1,11 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # generate-version-info.sh
 # Generates version-info.json, which will be copied into the classpath
 # inside the Docker container. This file will be read by the /version
 # endpoint.
 
-set -euo pipefail
+set -eu
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {

@@ -76,6 +76,7 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
+    - build/generate-version-info.sh
     - build/create-image.sh
 
 trivy_scan:

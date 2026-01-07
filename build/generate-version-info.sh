@@ -47,7 +47,10 @@ BRANCH="${CI_COMMIT_REF_NAME:-unknown}"
 VERSION="${CI_COMMIT_TAG:-${BRANCH}}"
 COMMIT="${CI_COMMIT_SHORT_SHA:-unknown}"
 BUILD_DATE="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-REPO="clean" && test is_repository_dirty && REPO="dirty"
+REPO="clean"
+if is_repository_dirty; then
+  REPO="dirty"
+fi
 
 if [ -f "${OUTPUT_FILE}" ]; then
   rm "${OUTPUT_FILE}"

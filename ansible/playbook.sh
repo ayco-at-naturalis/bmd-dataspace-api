@@ -58,11 +58,16 @@ docker run \
     -l "${DEPLOY_HOST}" \
     ansible/deploy.yml
 
+is_repository_dirty() {
+  test -n "$(git status --porcelain)"
+}
+
+echo "++++$(git status --porcelain)+++++"
 
 if is_repository_dirty; then
   echo
   echo "*********************************************************"
-  echo "** WARNING: You are deploying from a dirty repository! **"
+  echo "** WARNING: You are deploying from a dirty repository!!!! **"
   echo "*********************************************************"
   echo
 fi

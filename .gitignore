@@ -22,6 +22,9 @@
 /ansible/inventory/group_vars/
 /ansible/inventory/host_vars/
 /ansible/secrets/
+/ansible/ssh/
+# In ssh dir, but just to be explicit:
+id_ed25519
 /ansible/.vagrant/
 
 /.tools/

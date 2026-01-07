@@ -45,7 +45,7 @@ if [[ ! -f "${TOKEN_FILE}" ]]; then
 	exit 1
 fi
 
-echo "---> Deleting old secrets (if any)"
+echo "---> Deleting old secrets"
 rm -rf "${INVENTORY_DIR}/group_vars" \
 	"${INVENTORY_DIR}/host_vars" \
 	"${ANSIBLE_DIR}/ssh"

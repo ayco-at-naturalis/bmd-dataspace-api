@@ -141,11 +141,14 @@ deploy_development:
   image: registry.gitlab.com/naturalis/lib/alpine-bookworm-cicd-utils:bookworm
   variables:
     DEPLOY_HOST: dev
+  rules:
+    - if: $DEPLOY_HOST == 'dev'
   before_script:
     - set -eu
   script:
-    - ansible/get-vault-token.sh
-    #- ansible/pull-vault-secrets.sh
+    - ansible/deploy.sh
+#    - ansible/get-vault-token.sh
+#    - ansible/pull-vault-secrets.sh
 
 publish_javadocs:
   # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/

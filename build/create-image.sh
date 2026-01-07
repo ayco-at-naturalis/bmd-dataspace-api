@@ -46,7 +46,7 @@ COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
 KANIKO_CONFIG="{ \"auths\": { \"${CI_REGISTRY}\": { \"username\": \"${CI_REGISTRY_USER}\", \"password\": \"${CI_REGISTRY_PASSWORD}\" }}}"
 
 if is_gitlab_pipeline; then
-  mkdir -p /kaniko/.docker
+  mkdir -p 1/.docker
   echo "${KANIKO_CONFIG}" > /kaniko/.docker/config.json
   /kaniko/executor \
     --context "${BASE_DIR}/build" \

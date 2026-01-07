@@ -66,8 +66,7 @@ is_valid_image_tag() { # tag
 }
 
 is_repository_dirty() {
-  test -z "$(git status --porcelain)" && echo clean && return 0
-  echo dirty
+  test -n "$(git status --porcelain)"
 }
 
 docker_login() {

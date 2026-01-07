@@ -43,9 +43,9 @@ if [ ! -d "${BASE_DIR}/build/app" ]; then
 fi
 
 OUTPUT_FILE="${BASE_DIR}/build/app/version-info.json"
-BRANCH="${CI_COMMIT_REF_NAME:-unknown}"
-VERSION="${CI_COMMIT_TAG:-${BRANCH}}"
-COMMIT="${CI_COMMIT_SHORT_SHA:-unknown}"
+BRANCH="${CI_COMMIT_REF_NAME:-}"
+VERSION="${CI_COMMIT_TAG:-}"
+COMMIT="${CI_COMMIT_SHORT_SHA:-}"
 BUILD_DATE="$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 REPO="clean"
 if is_repository_dirty; then

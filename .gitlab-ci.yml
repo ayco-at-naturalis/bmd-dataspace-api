@@ -16,6 +16,10 @@ variables:
     VAULT_ID_TOKEN:
       aud: https://${CI_SERVER_HOST}
 
+.no_prod_deploy: &no_prod_deploy
+  - if: '$DEPLOY_PRODUCTION == "true"'
+    when: never
+
 stages:
   - "Secret Detection"
   - "Maven Build"
@@ -63,6 +67,8 @@ secret_detection:
 
 maven_build:
   stage: "Maven Build"
+  rules:
+    - *no_prod_deploy
   script:
     - build/mvn-install.sh
   artifacts:
@@ -73,6 +79,8 @@ maven_build:
 
 create_image:
   stage: "Create Image"
+  rules:
+    - *no_prod_deploy
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -82,6 +90,8 @@ create_image:
 
 trivy_scan:
   stage: "Trivy Scan"
+  rules:
+    - *no_prod_deploy
   image:
     name: docker.io/aquasec/trivy:latest
     entrypoint: [""]
@@ -128,6 +138,8 @@ trivy_scan:
 
 tag_docker_image:
   stage: "Tag Image"
+  rules:
+    - *no_prod_deploy
   image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
   services:
     - docker:${DIND_VERSION}-dind
@@ -138,23 +150,44 @@ tag_docker_image:
 deploy_development:
   <<: *job_id_tokens
   stage: Deploy
+  rules:
+    - *no_prod_deploy
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: never
+    - when: on_success
   image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
   services:
     - docker:${DIND_VERSION}-dind
   variables:
     DEPLOY_HOST: dev
-  rules:
-    - if: $DEPLOY_HOST == 'dev'
-  before_script:
-    - set -eu
   script:
     - ansible/deploy.sh
-#    - ansible/get-vault-token.sh
-#    - ansible/pull-vault-secrets.sh
+
+
+deploy_production:
+  <<: *job_id_tokens
+  stage: Deploy
+  image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
+  services:
+    - docker:${DIND_VERSION}-dind
+  variables:
+    DEPLOY_HOST: prod
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == "main" && $DEPLOY_PRODUCTION == "true" && $IMAGE_VERSION'
+      when: on_success
+    - when: never
+  script:
+    - ansible/deploy.sh
 
 publish_javadocs:
-  # Publishes the javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
+  # Publishes the Javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
   stage: "Publish Javadocs"
+  rules:
+    - *no_prod_deploy
   script:
     - build/publish-javadocs.sh
   artifacts:

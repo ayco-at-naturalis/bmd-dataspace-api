@@ -1,4 +1,4 @@
-FROM eclipse-temurin:24-jre
+FROM eclipse-temurin:24-jre-noble
 
 ENV LANG=en_US.UTF-8
 

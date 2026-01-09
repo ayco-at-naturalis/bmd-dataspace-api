@@ -16,9 +16,13 @@ variables:
     VAULT_ID_TOKEN:
       aud: https://${CI_SERVER_HOST}
 
-.no_prod_deploy: &no_prod_deploy
-  - if: '$DEPLOY_PRODUCTION == "true"'
+# If we are going to deploy a pre-built image (i.e. already built in a previous
+# pipeline, then skip all build-like jobs
+.no_image_promotion: &no_image_promotion
+  - if: '$IMAGE_VERSION'
     when: never
+  - when: on_success
+
 
 stages:
   - "Secret Detection"
@@ -27,7 +31,7 @@ stages:
   - "Trivy Scan"
   - "Tag Image"
   - "Deploy"
-  - "Publish Javadocs"
+  - "Deploy Production" # Special case - includes publishing Javadocs
 
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
@@ -68,7 +72,7 @@ secret_detection:
 maven_build:
   stage: "Maven Build"
   rules:
-    - *no_prod_deploy
+    *no_image_promotion
   script:
     - build/mvn-install.sh
   artifacts:
@@ -80,7 +84,7 @@ maven_build:
 create_image:
   stage: "Create Image"
   rules:
-    - *no_prod_deploy
+    *no_image_promotion
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
@@ -90,25 +94,29 @@ create_image:
 
 trivy_scan:
   stage: "Trivy Scan"
-  rules:
-    - *no_prod_deploy
   image:
     name: docker.io/aquasec/trivy:latest
     entrypoint: [""]
+  variables:
+    TRIVY_CACHE_DIR: .trivy
   cache:
     key: trivy-cache
     paths:
-      - .trivy/
+      - "$TRIVY_CACHE_DIR"
   before_script:
-    - COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
+    # Tag "${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}" is the tag created by create-image.sh.
+    # If the user has specified a particular tag via the IMAGE_VERSION pipeline variable,
+    # then we must scan the image with that tag.
+    - if [ -z "${IMAGE_VERSION:-}" ]; then IMAGE_VERSION="${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"; fi
+    - IMAGE="${CI_REGISTRY_IMAGE}:${IMAGE_VERSION}"
     - "wget --header \"PRIVATE-TOKEN: $TRIVYIGNORE_ACCESS_TOKEN\" \"https://gitlab.com/api/v4/projects/41791412/repository/files/trivyignore/raw?ref=main\" --output-document=.trivyignore"
     - trivy --version
-    - mkdir -p .trivy
+    - mkdir -p "$TRIVY_CACHE_DIR"
     - |
       if [ ! -f .trivy/db/trivy.db ] || [ $(find .trivy/ -name "trivy.db" -mtime +1 | grep "trivy.db") ]; then
           echo "Downloading the trivy db ...";
-          rm -rf .trivy/db;
-          trivy image --cache-dir .trivy/ --download-db-only --db-repository $TRIVY_DB_REPOSITORY;
+          rm -rf $TRIVY_CACHE_DIR/db;
+          trivy image --cache-dir "$TRIVY_CACHE_DIR" --download-db-only --db-repository $TRIVY_DB_REPOSITORY;
       fi
   script:
     # GitLab-compatible report
@@ -118,28 +126,29 @@ trivy_scan:
       --scanners vuln
       --format template --template "@/contrib/gitlab.tpl"
       -o gl-container-scanning-report.json
-      "${COMMIT_HASH_IMAGE}"
+      "${IMAGE}"
     # Hard-fail on HIGH/CRITICAL (after writing the report)
     - >
       trivy image --cache-dir "$TRIVY_CACHE_DIR" --no-progress
       --username "$CI_REGISTRY_USER" --password "$CI_JOB_TOKEN"
       --ignore-unfixed --exit-code 1 --severity HIGH,CRITICAL
-      "${COMMIT_HASH_IMAGE}"
+      "${IMAGE}"
   artifacts:
     when: always
     # If we ever switch to GitLab Ultimate, this file will be picked up
     # by GitLab and used in a sexy security dashboard
     reports:
-      container_scanning: gl-container-scanning-report.json
+      container_scanning: "gl-container-scanning-report.json"
     paths:
-      - gl-container-scanning-report.json
-      - .trivy/
+      - "gl-container-scanning-report.json"
+      - "$TRIVY_CACHE_DIR"
     expire_in: 7 days
 
 tag_docker_image:
   stage: "Tag Image"
   rules:
-    - *no_prod_deploy
+    - if: "$IMAGE_VERSION"
+      when: never
   image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
   services:
     - docker:${DIND_VERSION}-dind
@@ -149,26 +158,25 @@ tag_docker_image:
 
 deploy_development:
   <<: *job_id_tokens
-  stage: Deploy
+  stage: "Deploy"
+  variables:
+    DEPLOY_HOST: dev
   rules:
-    - *no_prod_deploy
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$DEPLOY_ENV && $DEPLOY_ENV != "dev"'
       when: never
     - when: on_success
   image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
   services:
     - docker:${DIND_VERSION}-dind
-  variables:
-    DEPLOY_HOST: dev
   script:
     - ansible/deploy.sh
 
 
 deploy_production:
   <<: *job_id_tokens
-  stage: Deploy
+  stage: "Deploy Production"
   image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
   services:
     - docker:${DIND_VERSION}-dind
@@ -177,7 +185,7 @@ deploy_production:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       when: never
-    - if: '$CI_COMMIT_BRANCH == "main" && $DEPLOY_PRODUCTION == "true" && $IMAGE_VERSION'
+    - if: '$CI_COMMIT_BRANCH == "main" && $DEPLOY_ENV == "prod" && $IMAGE_VERSION'
       when: on_success
     - when: never
   script:
@@ -185,9 +193,11 @@ deploy_production:
 
 publish_javadocs:
   # Publishes the Javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
-  stage: "Publish Javadocs"
+  stage: "Deploy Production"
   rules:
-    - *no_prod_deploy
+    - if: '$CI_COMMIT_BRANCH == "main" && $DEPLOY_ENV == "prod" && $IMAGE_VERSION'
+      when: on_success
+    - when: never
   script:
     - build/publish-javadocs.sh
   artifacts:

@@ -2,7 +2,11 @@ FROM eclipse-temurin:24-jre-noble
 
 ENV LANG=en_US.UTF-8
 
-RUN mkdir -p \
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && apt-get install -y --no-install-recommends ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p \
     /opt/classpath \
     /opt/app \
     /data/bmd/jena \

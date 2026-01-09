@@ -76,8 +76,12 @@ maven_build:
   stage: "Maven Build"
   rules:
     *no_image_promotion
+  variables:
+    # Needed for generate-version-info.sh. Ensures tags are available in pipeline:
+    GIT_DEPTH: 0
   script:
     - build/mvn-install.sh
+    - build/generate-version-info.sh
   artifacts:
     expire_in: 3 days
     paths:
@@ -92,7 +96,6 @@ create_image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - build/generate-version-info.sh
     - build/create-image.sh
 
 trivy_scan:

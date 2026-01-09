@@ -35,7 +35,7 @@ fi
 if ! is_gitlab_pipeline; then
   CI_COMMIT_REF_NAME="$(git rev-parse --abbrev-ref HEAD 2> /dev/null)"
   CI_COMMIT_SHORT_SHA="$(git rev-parse --short HEAD 2> /dev/null)"
-  CI_COMMIT_TAG="$(git describe --tags --exact-match HEAD 2> /dev/null)"
+  CI_COMMIT_TAG="$(git describe --tags --exact-match HEAD 2> /dev/null || echo "")"
 fi
 
 echo "Generating version-info.json"

@@ -1,5 +1,15 @@
 server:
   port: 8080
+  tomcat:
+    accesslog:
+      enabled: true
+      directory: /proc/self/fd
+      prefix: "1"
+      suffix: ""
+      file-date-format: ""
+      rotate: false
+      buffered: false
+      pattern: '%a %l %u %t "%r" %s %b %D'
 
 spring:
   mvc:

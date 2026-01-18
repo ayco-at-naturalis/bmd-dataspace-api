@@ -24,11 +24,6 @@ public class ROCrateController {
     this.dao = dao;
   }
 
-  /**
-   * Demo-friendly ingest:
-   * POST /rocrate/ingest?fetchFrom=https://.../crate.zip
-   * Returns 201 Created with Location header + body {id, graphUri}.
-   */
   @PostMapping("/ingest")
   public ResponseEntity<ROCrateDao.IngestResult> ingest(@RequestParam("fetchFrom") URI fetchFrom) {
     log.info("Ingesting RO-Crate from URL {}", fetchFrom);
@@ -62,8 +57,7 @@ public class ROCrateController {
   }
 
   /**
-   * Get the stored metadata graph back (demo-friendly).
-   * Usage: /rocrate/{id}/metadata?format=jsonld|turtle
+   * Get the stored metadata graph back (demo-friendly). Usage: /rocrate/{id}/metadata?format=jsonld|turtle
    */
   @GetMapping("/{id}/metadata")
   public ResponseEntity<String> getMetadata(

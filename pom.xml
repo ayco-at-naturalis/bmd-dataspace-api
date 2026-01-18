@@ -41,6 +41,7 @@
         <springdoc-openapi.version>3.0.0</springdoc-openapi.version>
         <apache-jena.version>5.6.0</apache-jena.version>
         <klojang.version>24.2.0</klojang.version>
+        <klojang-convert.version>24.2.1</klojang-convert.version>
     </properties>
 
     <dependencyManagement>
@@ -91,6 +92,19 @@
         </dependency>
 
         <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.jena</groupId>
             <artifactId>apache-jena-libs</artifactId>
             <type>pom</type>
@@ -101,6 +115,17 @@
             <groupId>org.klojang</groupId>
             <artifactId>klojang-check</artifactId>
             <version>${klojang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.klojang</groupId>
+            <artifactId>klojang-util</artifactId>
+            <version>${klojang.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.klojang</groupId>
+            <artifactId>klojang-convert</artifactId>
+            <version>${klojang-convert.version}</version>
         </dependency>
 
         <!-- TEST -->

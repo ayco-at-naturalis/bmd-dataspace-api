@@ -12,31 +12,36 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.klojang.util.ArrayMethods.implode;
 
-@RestController
-@RequestMapping("/sites")
-public class SiteController {
+@RestController @RequestMapping("/sites") public class SiteController {
 
-  private final SiteDao siteDao;
+  private final SiteDao dao;
 
   public SiteController(SiteDao siteDao) {
-    this.siteDao = siteDao;
+    this.dao = siteDao;
   }
 
-  @GetMapping("/{id}/metadata")
-  public ResponseEntity<Site> getMetadataDefault(@PathVariable("id") String siteCode) {
+  @GetMapping("/lookup")
+  public ResponseEntity<Map<String,List<List<String>>>> getSiteIndex() {
+    return ResponseEntity.ok(dao.getSiteIndex());
+  }
+
+  @GetMapping("/{siteCode}/metadata")
+  public ResponseEntity<Site> getMetadataDefault(@PathVariable String siteCode) {
     // MVP default (demo-friendly). Change to EEA_NATURA2000 when implemented.
     SiteMetadataSource defaultSource = SiteMetadataSource.EUNIS;
-    Site site = siteDao.getMetadataBySiteCode(siteCode, defaultSource);
+    Site site = dao.getMetadataForSite(siteCode, defaultSource);
     return ResponseEntity.ok(site);
   }
 
-  @GetMapping("/{id}/metadata/{source}")
+  @GetMapping("/{siteCode}/metadata/{source}")
   public ResponseEntity<Site> getMetadataBySource(
-      @PathVariable("id") String siteCode,
-      @PathVariable("source") String siteMetadataSource
-  ) {
+      @PathVariable String siteCode,
+      @PathVariable("source") String siteMetadataSource) {
     SiteMetadataSource src;
     try {
       src = SiteMetadataSource.parse(siteMetadataSource);
@@ -48,7 +53,19 @@ public class SiteController {
     if (src == SiteMetadataSource.EEA_NATURA2000) {
       throw new NotImplementedException("EEA_NATURA2000 site metadata not implemented yet");
     }
-    Site site = siteDao.getMetadataBySiteCode(siteCode, src);
+    Site site = dao.getMetadataForSite(siteCode, src);
     return ResponseEntity.ok(site);
   }
+
+  @GetMapping("/{siteCode}/geojson")
+  public ResponseEntity<?> getGeoJsonForSite(@PathVariable String siteCode) {
+    String geoJson = dao.getGeoJsonForSite(siteCode);
+    return ResponseEntity.ok(geoJson);
+  }
+
+  @GetMapping("/{siteCode}/geopackage")
+  public ResponseEntity<?> getGeoPackageForSite(@PathVariable String siteCode) {
+    throw new NotImplementedException("GeoPackage download not implemented yet");
+  }
+
 }

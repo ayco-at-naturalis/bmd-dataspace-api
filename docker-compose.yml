@@ -7,8 +7,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - "${DATA_DIR:?Missing DATA_DIR}/jena:/data/bmd/jena"
-      - "${DATA_DIR:?Missing DATA_DIR}/log:/data/bmd/log"
+      - "${DATA_DIR:?Missing DATA_DIR}:/data/bmd"
       - "./logback-spring.xml:/logback-spring.xml"
     environment:
       JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:?Missing JAVA_TOOL_OPTIONS}"

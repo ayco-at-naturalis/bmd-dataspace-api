@@ -246,6 +246,10 @@ public class JenaROCrateDao implements ROCrateDao {
           lang = Lang.JSONLD;
           mediaType = "application/ld+json";
         }
+        case RDFXML -> {
+          lang = Lang.RDFXML;
+          mediaType = "application/rdf+xml";
+        }
         default -> throw new IllegalArgumentException("Unsupported graph format: " + format);
       }
       RDFDataMgr.write(out, model, lang);

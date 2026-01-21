@@ -6,7 +6,7 @@
 
     <groupId>eu.bmd-project</groupId>
     <artifactId>bmd-dataspace-api</artifactId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
     <name>BMD Dataspace API</name>
     <description>BMD Dataspace API</description>
 

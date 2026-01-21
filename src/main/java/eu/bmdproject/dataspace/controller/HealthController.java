@@ -14,7 +14,7 @@ public class HealthController {
   public ResponseEntity<Map<String, Object>> health() {
     return ResponseEntity.ok(Map.of(
         "status", "ok",
-        "service", "bmd-triple-store",
+        "service", "BMD Dataspace API",
         "note", "stub"
     ));
   }

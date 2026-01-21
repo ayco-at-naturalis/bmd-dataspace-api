@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 @RestController
-@RequestMapping("/rocrate")
+@RequestMapping("/rocrates")
 public class ROCrateController {
 
   private static final Logger log = LoggerFactory.getLogger(ROCrateController.class);
@@ -28,7 +28,7 @@ public class ROCrateController {
   public ResponseEntity<ROCrateDao.IngestResult> ingest(@RequestParam("fetchFrom") URI fetchFrom) {
     log.info("Ingesting RO-Crate from URL {}", fetchFrom);
     ROCrateDao.IngestResult result = dao.ingestFromUrl(fetchFrom);
-    URI location = URI.create("/rocrate/" + result.id());
+    URI location = URI.create("/rocrates/" + result.id());
     return ResponseEntity.created(location).body(result);
   }
 
@@ -47,22 +47,16 @@ public class ROCrateController {
   }
 
   /**
-   * Summary endpoint: triple count, etc.
+   * Graph dump endpoint (default Turtle).
+   * Usage:
+   *   /rocrates/{id}                 -> Turtle
+   *   /rocrates/{id}?format=rdfxml   -> RDF/XML
+   *   /rocrates/{id}?format=jsonld   -> JSON-LD
    */
   @GetMapping("/{id}")
-  public ResponseEntity<ROCrateDao.CrateSummary> getSummary(@PathVariable("id") String id) {
-    return dao.getSummary(id)
-        .map(ResponseEntity::ok)
-        .orElseGet(() -> ResponseEntity.notFound().build());
-  }
-
-  /**
-   * Get the stored metadata graph back (demo-friendly). Usage: /rocrate/{id}/metadata?format=jsonld|turtle
-   */
-  @GetMapping("/{id}/metadata")
-  public ResponseEntity<String> getMetadata(
+  public ResponseEntity<String> getGraph(
       @PathVariable("id") String id,
-      @RequestParam(value = "format", defaultValue = "jsonld") String format
+      @RequestParam(value = "format", defaultValue = "turtle") String format
   ) {
     GraphFormat graphFormat = parseFormat(format);
 
@@ -71,6 +65,27 @@ public class ROCrateController {
             .contentType(MediaType.valueOf(payload.mediaType()))
             .body(payload.body()))
         .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  /**
+   * Summary endpoint: triple count, etc.
+   */
+  @GetMapping("/{id}/summary")
+  public ResponseEntity<ROCrateDao.CrateSummary> getSummary(@PathVariable("id") String id) {
+    return dao.getSummary(id)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  /**
+   * Backwards-compatible alias. Consider removing once clients switch to GET /rocrates/{id}.
+   */
+  @GetMapping("/{id}/metadata")
+  public ResponseEntity<String> getMetadataAlias(
+      @PathVariable("id") String id,
+      @RequestParam(value = "format", defaultValue = "jsonld") String format
+  ) {
+    return getGraph(id, format);
   }
 
   /**
@@ -83,10 +98,11 @@ public class ROCrateController {
   }
 
   private static GraphFormat parseFormat(String format) {
-    String f = format == null ? "jsonld" : format.trim().toLowerCase(Locale.ROOT);
+    String f = format == null ? "turtle" : format.trim().toLowerCase(Locale.ROOT);
     return switch (f) {
       case "turtle", "ttl", "text/turtle" -> GraphFormat.TURTLE;
       case "jsonld", "json-ld", "application/ld+json" -> GraphFormat.JSONLD;
+      case "rdfxml", "rdf/xml", "rdf-xml", "xml", "application/rdf+xml" -> GraphFormat.RDFXML;
       default -> throw new IllegalArgumentException("Unsupported format: " + format);
     };
   }

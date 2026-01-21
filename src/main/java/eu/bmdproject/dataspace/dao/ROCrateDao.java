@@ -25,6 +25,6 @@ public interface ROCrateDao {
   record GraphPayload(String graphUri, String body, String mediaType) {}
 
   enum GraphFormat {
-    JSONLD, TURTLE
+    JSONLD, TURTLE, RDFXML
   }
 }

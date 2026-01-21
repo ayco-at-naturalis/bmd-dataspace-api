@@ -2,6 +2,7 @@ package eu.bmdproject.dataspace.util.eea;
 
 import eu.bmdproject.dataspace.dao.DaoException;
 import eu.bmdproject.dataspace.model.BiseSite;
+import eu.bmdproject.dataspace.model.DefaultSite;
 import eu.bmdproject.dataspace.model.EunisSite;
 import eu.bmdproject.dataspace.util.json.JsonUtil;
 import org.klojang.check.Check;
@@ -9,6 +10,11 @@ import org.klojang.convert.NumberMethods;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -17,6 +23,32 @@ import static org.klojang.check.CommonChecks.instanceOf;
 import static org.klojang.util.ClassMethods.simpleClassName;
 
 public class SiteMetaDataUtils {
+
+  public static DefaultSite createDefaultSite(ResultSet rs) throws SQLException {
+    DefaultSite site = new DefaultSite();
+    site.setSiteCode(rs.getString("SITECODE"));
+    site.setSiteName(rs.getString("SITENAME"));
+    site.setSiteType(rs.getString("SITETYPE"));
+    site.setCountryCode(rs.getString("COUNTRY_CODE"));
+    site.setAreaHa(getNullableDouble(rs, "AREAHA"));
+    site.setDateCompilation(getDate(rs, "DATE_COMPILATION"));
+    site.setDateSac(getDate(rs, "DATE_SAC"));
+    site.setDateConfSci(getDate(rs, "DATE_CONF_SCI"));
+    site.setDatePropSci(getDate(rs, "DATE_PROP_SCI"));
+    site.setDateSpa(getDate(rs, "DATE_SPA"));
+    site.setDocumentation(rs.getString("DOCUMENTATION"));
+    site.setDesignation(rs.getString("DESIGNATION"));
+    site.setQuality(rs.getString("QUALITY"));
+    site.setInspireId(rs.getString("INSPIRE_ID"));
+    site.setExplanations(rs.getString("EXPLANATIONS"));
+    site.setSacLegalReference(rs.getString("SAC_LEGAL_REFERENCE"));
+    site.setOthercharact(rs.getString("OTHERCHARACT"));
+    site.setLengthKm(getNullableDouble(rs, "LENGTHKM"));
+    site.setMarineAreaPercentage(getNullableDouble(rs, "MARINE_AREA_PERCENTAGE"));
+    site.setLatitude(getNullableDouble(rs, "LATITUDE"));
+    site.setLongitude(getNullableDouble(rs, "LONGITUDE"));
+    return site;
+  }
 
   public static EunisSite processEUNISResponse(byte[] jsonResponse) {
     try {
@@ -100,6 +132,20 @@ public class SiteMetaDataUtils {
     Check.that(val).is(instanceOf(), Number.class, typeError(key, val, double.class));
     return ((Number) val).doubleValue();
   }
+
+  private static Double getNullableDouble(ResultSet rs, String column) throws SQLException {
+    double val = rs.getDouble(column);
+    return rs.wasNull() ? null : val;
+  }
+
+  private static OffsetDateTime getDate(ResultSet rs, String column) throws SQLException {
+    String dateString = rs.getString(column);
+    if (dateString == null) {
+      return null;
+    }
+    return LocalDateTime.parse(dateString).atOffset(ZoneOffset.UTC);
+  }
+
 
   private static Integer getInt(Map<String, Object> m, String key) {
     Object v = m.get(key);

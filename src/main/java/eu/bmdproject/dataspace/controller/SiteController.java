@@ -25,16 +25,14 @@ import static org.klojang.util.ArrayMethods.implode;
     this.dao = siteDao;
   }
 
-  @GetMapping("/lookup")
+  @GetMapping("/index")
   public ResponseEntity<Map<String,List<List<String>>>> getSiteIndex() {
     return ResponseEntity.ok(dao.getSiteIndex());
   }
 
   @GetMapping("/{siteCode}/metadata")
   public ResponseEntity<Site> getMetadataDefault(@PathVariable String siteCode) {
-    // MVP default (demo-friendly). Change to EEA_NATURA2000 when implemented.
-    SiteMetadataSource defaultSource = SiteMetadataSource.EUNIS;
-    Site site = dao.getMetadataForSite(siteCode, defaultSource);
+    Site site = dao.getMetadataForSite(siteCode, SiteMetadataSource.DEFAULT);
     return ResponseEntity.ok(site);
   }
 
@@ -49,9 +47,6 @@ import static org.klojang.util.ArrayMethods.implode;
       String fmt = "No such site metadata source: \"%s\". Valid metadata sources: %s";
       String msg = fmt.formatted(siteMetadataSource, implode(SiteMetadataSource.values()));
       throw new BadRequestException(msg);
-    }
-    if (src == SiteMetadataSource.EEA_NATURA2000) {
-      throw new NotImplementedException("EEA_NATURA2000 site metadata not implemented yet");
     }
     Site site = dao.getMetadataForSite(siteCode, src);
     return ResponseEntity.ok(site);

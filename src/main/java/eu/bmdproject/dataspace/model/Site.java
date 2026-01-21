@@ -1,10 +1,11 @@
 package eu.bmdproject.dataspace.model;
 
-public abstract sealed class Site permits EunisSite, BiseSite {
+public abstract sealed class Site permits DefaultSite, EunisSite, BiseSite {
 
   // Common denominator (present in both EUNIS + BISE outputs)
   private String siteCode;     // EUNIS: code_site, BISE: site_code
   private String siteName;
+  private String countryCode;
   private String countryName;
   private String siteType;
   private Double areaKm2;
@@ -28,6 +29,15 @@ public abstract sealed class Site permits EunisSite, BiseSite {
   public void setSiteName(String siteName) {
     this.siteName = siteName;
   }
+
+  public String getCountryCode() {
+    return countryCode;
+  }
+
+  public void setCountryCode(String countryCode) {
+    this.countryCode = countryCode;
+  }
+
 
   public String getCountryName() {
     return countryName;

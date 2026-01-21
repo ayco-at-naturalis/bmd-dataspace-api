@@ -1,0 +1,31 @@
+{
+  "dataSpace": {
+    "id": "urn:dataspace:biodiversity",
+    "name": "Biodiversity Data Space",
+    "domain": "biodiversity",
+    "description": "The Biodiversity Meets Data (BMD) project is creating a data space using cloud-native open infrastructure to support biodiversity monitoring, conservation, and policy across terrestrial, freshwater, and marine environments.",
+    "governanceRole": "DomainDataSpace",
+    "alignment": [
+      "European Green Deal Data Space",
+      "EOSC"
+    ]
+  },
+  "service": {
+    "name": "Biodiversity Data Space API",
+    "type": "DataSpaceGateway",
+    "capabilities": [
+      "data-product-discovery",
+      "metadata-exchange",
+      "provenance-tracking"
+    ]
+  },
+  "implementation": {
+    "operator": "Naturalis Biodiversity Center"
+  },
+  "projectContext": {
+    "projectName": "Biodiversity Meets Data",
+    "fundingProgramme": "Horizon Europe",
+    "cordis": "https://doi.org/10.3030/101181294",
+    "roleInDataSpace": "Initial implementation and pilot use cases"
+  }
+}

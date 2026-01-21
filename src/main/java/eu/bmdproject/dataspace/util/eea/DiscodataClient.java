@@ -22,7 +22,7 @@ public class DiscodataClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(DiscodataClient.class);
 
-  private static final int TIMEOUT_MS = (int) Duration.ofSeconds(2).toMillis();
+  private static final int TIMEOUT_MS = (int) Duration.ofSeconds(5).toMillis();
 
   private final RestClient restClient;
 

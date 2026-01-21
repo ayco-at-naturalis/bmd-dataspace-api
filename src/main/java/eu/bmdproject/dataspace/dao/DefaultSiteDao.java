@@ -1,7 +1,7 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.DiscoDataProperties;
-import eu.bmdproject.dataspace.exception.NotImplementedException;
+import eu.bmdproject.dataspace.exception.NotFoundException;
 import eu.bmdproject.dataspace.model.Site;
 import eu.bmdproject.dataspace.model.SiteMetadataSource;
 import eu.bmdproject.dataspace.util.eea.DiscodataClient;
@@ -43,7 +43,7 @@ public class DefaultSiteDao implements SiteDao {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultSiteDao.class);
 
-  // MVP: hardcode. You can move this into @ConfigurationProperties later.
+  // MVP: hardcode. Move this into @ConfigurationProperties later.
   private static final Path GPKG_PATH = Path.of("/data/bmd/resources/eea/Natura2000_end2024.gpkg");
   private static final String LAYER_NAME = "NaturaSite_polygon";
   private static final String SITECODE_COL = "SITECODE";
@@ -90,7 +90,7 @@ public class DefaultSiteDao implements SiteDao {
 
   @Override
   public Site getMetadataForSite(String siteCode, SiteMetadataSource source) {
-    LOG.info("Querying {} Discodata using site code \"{}\"", source, siteCode);
+    LOG.info("Querying {} database using site code \"{}\"", source, siteCode);
     Check.notNull(siteCode, "site code");
     Check.notNull(source, "site metadata source");
     return switch (source) {
@@ -106,7 +106,23 @@ public class DefaultSiteDao implements SiteDao {
         byte[] response = discodataClient.executeQuery(discodataConfig.endpoint(), sql);
         yield SiteMetaDataUtils.processBISEResponse(response);
       }
-      case EEA_NATURA2000 -> throw new NotImplementedException();
+      case DEFAULT -> {
+        String sql = getDefaultSql();
+        LOG.debug("SQL: {}", sql);
+        String url = "jdbc:sqlite:" + GPKG_PATH.toAbsolutePath();
+        try (Connection c = DriverManager.getConnection(url);
+             PreparedStatement ps = c.prepareStatement(sql)) {
+          ps.setString(1, siteCode);
+          try (ResultSet rs = ps.executeQuery()) {
+            if (!rs.next()) {
+              throw new NotFoundException("Invalid site code: \"" + siteCode + "\"");
+            }
+            yield SiteMetaDataUtils.createDefaultSite(rs);
+          }
+        } catch (SQLException e) {
+          throw new DaoException("Failed to generate site metadata", e);
+        }
+      }
     };
   }
 
@@ -160,10 +176,38 @@ public class DefaultSiteDao implements SiteDao {
   }
 
   private static Map<String, Object> getConnectionDetails() {
-//    Map<String, Object> params = new HashMap<>();
-//    params.put("dbtype", "geopkg");
-//    params.put("database", GPKG_PATH.toAbsolutePath().toString());
     return Map.of("dbtype", "geopkg", "database", GPKG_PATH.toAbsolutePath().toString());
+  }
+
+  private static String getDefaultSql() {
+    return """
+        SELECT
+          SITECODE,
+          SITENAME,
+          SITETYPE,
+          COUNTRY_CODE,
+          DATE_COMPILATION,
+          DATE_UPDATE,
+          DATE_SPA,
+          SPA_LEGAL_REFERENCE,
+          DATE_PROP_SCI,
+          DATE_CONF_SCI,
+          DATE_SAC,
+          SAC_LEGAL_REFERENCE,
+          EXPLANATIONS,
+          AREAHA,
+          LENGTHKM,
+          MARINE_AREA_PERCENTAGE,
+          DOCUMENTATION,
+          QUALITY,
+          DESIGNATION,
+          OTHERCHARACT,
+          LATITUDE,
+          LONGITUDE,
+          INSPIRE_ID
+        FROM NATURA2000SITES
+        WHERE SITECODE = ?
+        LIMIT 1""";
   }
 
 

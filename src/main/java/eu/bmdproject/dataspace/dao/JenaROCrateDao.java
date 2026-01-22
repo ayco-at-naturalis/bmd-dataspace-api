@@ -134,8 +134,8 @@ public class JenaROCrateDao implements ROCrateDao {
 
   @Override
   public boolean delete(String id) {
-    LOG.debug("Deleting graph with ID {}", id);
-    String graphUri = graphUriFor(id);
+     String graphUri = graphUriFor(id);
+    LOG.debug("Graoh URI for RO-Crate: \"{}\"", graphUri);
     dataset.begin(ReadWrite.WRITE);
     try {
       if (!dataset.containsNamedModel(graphUri)) {

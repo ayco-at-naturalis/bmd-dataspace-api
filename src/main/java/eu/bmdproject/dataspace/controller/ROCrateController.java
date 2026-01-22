@@ -16,7 +16,7 @@ import java.util.Locale;
 @RequestMapping("/rocrates")
 public class ROCrateController {
 
-  private static final Logger log = LoggerFactory.getLogger(ROCrateController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ROCrateController.class);
 
   private final ROCrateDao dao;
 
@@ -26,7 +26,7 @@ public class ROCrateController {
 
   @PostMapping("/ingest")
   public ResponseEntity<ROCrateDao.IngestResult> ingest(@RequestParam("fetchFrom") URI fetchFrom) {
-    log.info("Ingesting RO-Crate from URL {}", fetchFrom);
+    LOG.info("Ingesting RO-Crate from URL {}", fetchFrom);
     ROCrateDao.IngestResult result = dao.ingestFromUrl(fetchFrom);
     URI location = URI.create("/rocrates/" + result.id());
     return ResponseEntity.created(location).body(result);
@@ -93,6 +93,7 @@ public class ROCrateController {
    */
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable("id") String id) {
+    LOG.info("Deleting RO-Crate with ID \"{}\"", id);
     boolean deleted = dao.delete(id);
     return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }

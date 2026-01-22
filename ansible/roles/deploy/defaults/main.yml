@@ -4,7 +4,7 @@ compose_project_name: "bmd-dataspace-api"
 
 # Derived locations (override if needed)
 deploy_dir: "/opt/projects/{{ compose_project_name }}"
-data_dir: "/data/{{ compose_project_name }}"
+data_dir: "/data/bmd"
 
 # Repo root relative to playbook_dir. playbook_dir is a magic variable
 # that points to the directory from which the playbook is run. In our

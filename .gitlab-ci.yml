@@ -22,7 +22,15 @@ variables:
 .no_image_promotion: &no_image_promotion
   - if: '$IMAGE_VERSION'
     when: never
+  - when: on_success
 
+workflow:
+  rules:
+    # If this is a push to a branch that already has an open MR, skip the push pipeline
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    # Otherwise create a pipeline
+    - when: always
 
 stages:
   - "Secret Detection"

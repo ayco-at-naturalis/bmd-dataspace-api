@@ -1,5 +1,3 @@
-image: eclipse-temurin:25-jdk
-
 variables:
   # Version of docker-dind and docker-cli-extras image
   DIND_VERSION: 28.4.0
@@ -29,7 +27,7 @@ variables:
 
 stages:
   - "Secret Detection"
-  - "Maven Build"
+  - "Build"
   - "Create Image"
   - "Trivy Scan"
   - "Tag Image"
@@ -73,20 +71,33 @@ secret_detection:
       fi
 
 maven_build:
-  stage: "Maven Build"
+  stage: "Build"
+  image: eclipse-temurin:25-jdk
+  rules:
+    *no_image_promotion
+  script:
+    - build/mvn-install.sh
+  artifacts:
+    expire_in: 3 days
+    paths:
+      - build/dependencies
+      - build/app
+
+generate_version_info:
+  stage: "Build"
+  image: "registry.gitlab.com/naturalis/lib/alpine-bookworm-cicd-utils:alpine"
   rules:
     *no_image_promotion
   variables:
     # Needed for generate-version-info.sh. Ensures tags are available in pipeline:
     GIT_DEPTH: 0
   script:
-    - build/mvn-install.sh
     - build/generate-version-info.sh
   artifacts:
     expire_in: 3 days
     paths:
-      - build/dependencies
       - build/app
+
 
 create_image:
   stage: "Create Image"
@@ -199,6 +210,7 @@ deploy_production:
 publish_javadocs:
   # Publishes the Javadocs to https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/
   stage: "Deploy Production"
+  image: eclipse-temurin:25-jdk
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $DEPLOY_ENV == "prod" && $IMAGE_VERSION'
       when: on_success

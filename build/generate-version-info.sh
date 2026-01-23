@@ -32,6 +32,10 @@ if ! is_gitlab_pipeline; then
   . "${BASE_DIR}/build/build.env"
 fi
 
+OUTPUT_DIR="${BASE_DIR}/build/app"
+OUTPUT_FILE="${OUTPUT_DIR}/version-info.json"
+mkdir -p "${OUTPUT_DIR}"
+
 if ! is_gitlab_pipeline; then
   CI_COMMIT_SHORT_SHA="$(git rev-parse --short HEAD 2> /dev/null)"
   CI_COMMIT_TAG="$(git describe --tags --exact-match HEAD 2> /dev/null || echo "")"
@@ -43,11 +47,6 @@ if [ ! -d "${BASE_DIR}/build/app" ]; then
   echo "Missing directory build/app. Run mvn-install.sh first" >&2
   exit 1
 fi
-
-OUTPUT_DIR="${BASE_DIR}/build/app"
-OUTPUT_FILE="${OUTPUT_DIR}/version-info.json"
-
-mkdir -p "${OUTPUT_DIR}"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 COMMIT="${CI_COMMIT_SHORT_SHA:-}"

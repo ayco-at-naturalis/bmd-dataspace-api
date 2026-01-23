@@ -20,7 +20,6 @@ public class WebClientConfig {
     ExchangeStrategies strategies = ExchangeStrategies.builder()
         .codecs(c -> c.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
         .build();
-
     return WebClient.builder()
         .clientConnector(new ReactorClientHttpConnector(http))
         .exchangeStrategies(strategies)

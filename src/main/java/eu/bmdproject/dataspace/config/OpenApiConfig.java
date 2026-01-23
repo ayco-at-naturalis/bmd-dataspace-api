@@ -16,16 +16,19 @@ public class OpenApiConfig {
 
   @Bean
   public OpenAPI customOpenAPI() throws IOException {
-//    ClassPathResource versionResource = new ClassPathResource("version-info.json");
-//    if (!versionResource.exists()) {
-//      throw new BmdRuntimeException("version-info.json not found");
-//    }
-//    Map<String, Object> versionInfo = JsonUtil.toMap(versionResource.getInputStream());
-//    String version = (String) versionInfo.get("api");
+    ClassPathResource versionResource = new ClassPathResource("version-info.json");
+    String version;
+    if (!versionResource.exists()) {
+      // We are running in IntelliJ / the CI/CD build scripts have not run yet
+      version = "unknown";
+    } else {
+      Map<String, Object> versionInfo = JsonUtil.toMap(versionResource.getInputStream());
+      version = (String) versionInfo.get("api");
+    }
     return new OpenAPI()
         .info(new Info()
             .title("BMD Dataspace API")
-            .version("0.0.5")
+            .version(version)
             .description("REST API for interacting with the BMD Dataspace"));
   }
 }

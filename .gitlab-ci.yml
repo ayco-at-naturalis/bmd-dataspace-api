@@ -22,7 +22,6 @@ variables:
 .no_image_promotion: &no_image_promotion
   - if: '$IMAGE_VERSION'
     when: never
-  - when: on_success
 
 
 stages:

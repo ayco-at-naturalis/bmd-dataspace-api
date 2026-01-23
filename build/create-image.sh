@@ -37,7 +37,7 @@ fi
 echo "Creating Docker image for commit \"${CI_COMMIT_SHA}\""
 
 if [ ! -f "${BASE_DIR}/build/app/version-info.json" ]; then
-  echo "Missing file version-info.json. Check generate-version-info.sh" >&2
+  echo "Missing version-info.json. Check generate-version-info.sh" >&2
   exit 1
 fi
 

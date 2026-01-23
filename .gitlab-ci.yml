@@ -44,7 +44,7 @@ stages:
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
   paths:
-    - docker/mvn-repo
+    - build/mvn-repo
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml

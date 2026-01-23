@@ -44,7 +44,10 @@ if [ ! -d "${BASE_DIR}/build/app" ]; then
   exit 1
 fi
 
-OUTPUT_FILE="${BASE_DIR}/build/app/version-info.json"
+OUTPUT_DIR="${BASE_DIR}/build/app"
+OUTPUT_FILE="${OUTPUT_DIR}/version-info.json"
+
+mkdir -p "${OUTPUT_DIR}"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 COMMIT="${CI_COMMIT_SHORT_SHA:-}"

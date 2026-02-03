@@ -35,7 +35,7 @@
         <maven-dependency-plugin.version>3.6.1</maven-dependency-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-resources-plugin.version>3.3.0</maven-resources-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
         <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
         <jacoco-plugin.version>0.8.13</jacoco-plugin.version>
@@ -56,6 +56,15 @@
         <commons-collections4.version>4.5.0</commons-collections4.version>
         <commons-io.version>2.20.0</commons-io.version>
         <error_prone_annotations.version>2.41.0</error_prone_annotations.version>
+
+        <!--
+          Required for Surefire late property evaluation (@{...} syntax).
+          Without defining this property, @{surefire.argLine} would be passed
+          literally to the JVM. See:
+          https://maven.apache.org/surefire/maven-surefire-plugin/faq.html#late-property-evaluation
+        -->
+        <surefire.argLine/>
+
     </properties>
 
     <dependencyManagement>
@@ -105,7 +114,7 @@
                 <version>${commons-collections4.version}</version>
             </dependency>
         </dependencies>
-      </dependencyManagement>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -210,6 +219,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <!-- Version managed by Spring Boot -->
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
@@ -285,21 +300,35 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven-dependency-plugin.version}</version>
-                <configuration>
-                    <outputDirectory>
-                        ${project.basedir}/build/dependencies
-                    </outputDirectory>
-                    <includeScope>runtime</includeScope>
-                </configuration>
                 <executions>
                     <execution>
+                        <!--
+                            Copy Mockito to build/agents. This will allow us to suppress the JVM's
+                            "WARNING: A terminally deprecated method in sun.misc.Unsafe has been called"
+                            when the Maven surefire plugin runs (see there)
+                        -->
+                        <id>copy-mockito</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.mockito</groupId>
+                                    <artifactId>mockito-core</artifactId>
+                                    <outputDirectory>${project.build.directory}/agents</outputDirectory>
+                                    <destFileName>mockito-core.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!--
+                            Copy dependencies to /build/dependencies. This directory is referenced in
+                            the Dockerfile!
+                        -->
                         <id>copy-dependencies</id>
                         <phase>install</phase>
                         <goals>
@@ -313,7 +342,8 @@
                     <execution>
                         <!--
                             The application jar itself will be copied to a separate directory (build/app),
-                            together with resources like version-info.json.
+                            together with resources like version-info.json. This directory is referenced
+                            in the Dockerfile!
                         -->
                         <id>copy-artifact</id>
                         <phase>install</phase>
@@ -335,6 +365,14 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <argLine>@{surefire.argLine} -javaagent:${project.build.directory}/agents/mockito-core.jar</argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

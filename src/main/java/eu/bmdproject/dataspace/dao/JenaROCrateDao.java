@@ -1,6 +1,5 @@
 package eu.bmdproject.dataspace.dao;
 
-import eu.bmdproject.dataspace.bootstrap.EndpointSummaryLogger;
 import eu.bmdproject.dataspace.config.GraphProperties;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
@@ -25,11 +24,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 

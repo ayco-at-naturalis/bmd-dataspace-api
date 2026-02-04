@@ -54,8 +54,7 @@ class DefaultSiteDaoMetadataEunisBiseTest {
     when(props.biseQueryTemplate()).thenReturn("ASK { '%s' }");
 
     byte[] bytes = "dummy".getBytes();
-    when(discodataClient.executeQuery("https://example/sparql", "ASK { 'FI123' }"))
-        .thenReturn(bytes);
+    when(discodataClient.executeQuery("https://example/sparql", "ASK { 'FI123' }")).thenReturn(bytes);
 
     Site expected = mock(BiseSite.class);
 

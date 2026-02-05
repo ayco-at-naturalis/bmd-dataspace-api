@@ -1,5 +1,6 @@
 package eu.bmdproject.dataspace.dao;
 
+import com.google.common.annotations.VisibleForTesting;
 import eu.bmdproject.dataspace.config.DiscoDataProperties;
 import eu.bmdproject.dataspace.exception.NotFoundException;
 import eu.bmdproject.dataspace.model.Site;
@@ -43,10 +44,15 @@ public class DefaultSiteDao implements SiteDao {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultSiteDao.class);
 
-  // MVP: hardcode. Move this into @ConfigurationProperties later.
-  private static final Path GPKG_PATH = Path.of("/data/bmd/resources/eea/Natura2000_end2024.gpkg");
   private static final String LAYER_NAME = "NaturaSite_polygon";
   private static final String SITECODE_COL = "SITECODE";
+
+  private static Path GPKG_PATH = Path.of("/data/bmd/resources/eea/Natura2000_end2024.gpkg");
+
+  @VisibleForTesting
+  static void setGpkgPathForTests(Path gpkgPath) {
+    GPKG_PATH = gpkgPath;
+  }
 
   private final DiscodataClient discodataClient;
   private final DiscoDataProperties discodataConfig;

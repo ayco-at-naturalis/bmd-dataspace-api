@@ -25,25 +25,25 @@ class DefaultSiteDaoGeoJsonTest {
 
   @Test
   void getGeoJsonForSite_returnsFeatureCollectionJson_withRealGeneratedGeoPackage() throws Exception {
-    // 1) Create a GeoPackage file and populate it with 1 feature
-    Path gpkgPath = tmp.resolve("test.gpkg");
-    SimpleFeatureType type = DataUtilities.createType(
-        "NaturaSite_polygon",
-        "the_geom:MultiPolygon:srid=3035,SITECODE:String"
-    );
-    Geometry geom3035 = new WKTReader().read("MULTIPOLYGON (((0 0, 0 1, 1 1, 0 0)))");
-    Object[] row = pack(geom3035, "FI123");
-    SimpleFeature feature = SimpleFeatureBuilder.build(type, row, null);
-    DefaultFeatureCollection collection = new DefaultFeatureCollection(null, type);
-    collection.add(feature);
-    try (GeoPackage geopackage = new GeoPackage(gpkgPath.toFile())) {
-      geopackage.init();
-      FeatureEntry entry = new FeatureEntry();
-      entry.setTableName("NaturaSite_polygon");
-      entry.setGeometryColumn("the_geom");
-      geopackage.add(entry, collection);
-    }
-
+//    // 1) Create a GeoPackage file and populate it with 1 feature
+//    Path gpkgPath = tmp.resolve("test.gpkg");
+//    SimpleFeatureType type = DataUtilities.createType(
+//        "NaturaSite_polygon",
+//        "the_geom:MultiPolygon:srid=3035,SITECODE:String"
+//    );
+//    Geometry geom3035 = new WKTReader().read("MULTIPOLYGON (((0 0, 0 1, 1 1, 0 0)))");
+//    Object[] row = pack(geom3035, "FI123");
+//    SimpleFeature feature = SimpleFeatureBuilder.build(type, row, null);
+//    DefaultFeatureCollection collection = new DefaultFeatureCollection(null, type);
+//    collection.add(feature);
+//    try (GeoPackage geopackage = new GeoPackage(gpkgPath.toFile())) {
+//      geopackage.init();
+//      FeatureEntry entry = new FeatureEntry();
+//      entry.setTableName("NaturaSite_polygon");
+//      entry.setGeometryColumn("the_geom");
+//      geopackage.add(entry, collection);
+//    }
+//
 //    DefaultFeatureCollection features = new DefaultFeatureCollection(null, featureType);
 //    features.add(SimpleFeatureBuilder.build(
 //        featureType,

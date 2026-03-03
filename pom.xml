@@ -66,6 +66,8 @@
         <surefire.argLine/>
 
         <jackson-bom.version>3.1.0</jackson-bom.version>
+        <aircompressor.version>0.27</aircompressor.version>
+        <jackson2-core.version>2.20.2</jackson2-core.version>
     </properties>
 
     <dependencyManagement>
@@ -91,6 +93,18 @@
                 <version>${gt-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.airlift</groupId>
+                <artifactId>aircompressor</artifactId>
+                <!-- Override vulnerable version from geotools bom -->
+                <version>${aircompressor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <!-- Override vulnerable version from geotools bom -->
+                <version>${jackson2-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.measure</groupId>

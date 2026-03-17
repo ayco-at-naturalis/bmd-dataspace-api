@@ -3,7 +3,7 @@
 # tag-image.sh
 # Adds various extra tags to the image created by create-image.sh
 
-set -euo pipefail
+set -eu
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -46,8 +46,8 @@ fi
 
 # EXTRA_IMAGE_TAG can optionally be specified in .gitlab-ci.yml, or as
 # as pipeline variable, or in build.env
-tag="${EXTRA_IMAGE_TAG:-}"
-if [ -n "${EXTRA_IMAGE_TAG:-}" ]; then
+tag="${EXTRA_IMAGE_TAG-}"
+if [ -n "${EXTRA_IMAGE_TAG-}" ]; then
   add_tag "${tag}"
 fi
 

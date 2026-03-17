@@ -108,9 +108,9 @@ create_image:
   stage: "Create Image"
   rules:
     *no_image_promotion
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+  image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
+  services:
+    - docker:${DIND_VERSION}-dind
   script:
     - build/create-image.sh
 

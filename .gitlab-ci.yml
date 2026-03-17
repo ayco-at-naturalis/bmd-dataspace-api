@@ -14,11 +14,9 @@ variables:
     VAULT_ID_TOKEN:
       aud: https://${CI_SERVER_HOST}
 
-# If we are going to deploy a pre-built image (i.e. already built in a previous
-# pipeline), then skip all build-like jobs. Deploying a pre-built, immutable image
-# is generally called "image promotion" - build & deploy on dev; deploy as-is on
-# prod. Strictly speaking we do not enforce immutability yet. Users might specify
-# (for exammple) "latest" as the IMAGE_VERSION to be deployed.
+# If we are going to deploy a pre-existing image, also known as image promotion,
+# then we skip all build-like jobs. We build-and-deploy to DEV, but we only deploy
+# a pre-built image to PROD.
 .no_image_promotion: &no_image_promotion
   - if: '$IMAGE_VERSION'
     when: never

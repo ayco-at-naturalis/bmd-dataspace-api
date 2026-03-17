@@ -35,7 +35,7 @@
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-        <maven-surefire-plugin.version>3.2.2</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <jacoco-plugin.version>0.8.13</jacoco-plugin.version>
 
@@ -50,11 +50,11 @@
         <apache-jena.version>6.0.0</apache-jena.version>
         <klojang.version>24.2.0</klojang.version>
         <klojang-convert.version>24.2.1</klojang-convert.version>
-        <sqlite-jdbc.version>3.51.2.0</sqlite-jdbc.version>
+        <sqlite-jdbc.version>3.51.3.0</sqlite-jdbc.version>
         <unit-api.version>2.2</unit-api.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
-        <commons-io.version>2.20.0</commons-io.version>
-        <error_prone_annotations.version>2.41.0</error_prone_annotations.version>
+        <commons-io.version>2.21.0</commons-io.version>
+        <error_prone_annotations.version>2.48.0</error_prone_annotations.version>
         <mockwebserver.version>5.3.2</mockwebserver.version>
 
         <!--
@@ -150,16 +150,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-            <!--exclusions>
-                <exclusion>
-                    <groupId>io.netty.incubator</groupId>
-                    <artifactId>netty-incubator-codec-quic</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.netty.incubator</groupId>
-                    <artifactId>netty-incubator-transport-native-quiche</artifactId>
-                </exclusion>
-            </exclusions-->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -2,8 +2,8 @@ variables:
   # Version of docker-dind and docker-cli-extras image
   DIND_VERSION: 28.4.0
   # HC Vault
-  SERVICE_NAME: bmd
   SERVICE_DOMAIN: bii
+  SERVICE_NAME: bmd
   VAULT_AUTH_ROLE: "jwt-${SERVICE_NAME}"
   VAULT_SERVER_URL: "https://vault.naturalis.io"
   VAULT_PATH: "${SERVICE_DOMAIN}/${SERVICE_NAME}"
@@ -103,7 +103,6 @@ generate_version_info:
     paths:
       - build/app
 
-
 create_image:
   stage: "Create Image"
   rules:
@@ -192,8 +191,8 @@ deploy_development:
   services:
     - docker:${DIND_VERSION}-dind
   script:
+    - echo "$VAULT_ID_TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq .
     - ansible/deploy.sh
-
 
 deploy_production:
   <<: *job_id_tokens

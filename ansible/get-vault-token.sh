@@ -77,6 +77,3 @@ chmod 600 "$TOKEN_FILE"
 echo
 echo "Vault token ready to be used"
 exit 0
-
-
-

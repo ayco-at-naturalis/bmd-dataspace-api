@@ -18,25 +18,25 @@ fi
 
 if ! is_gitlab_pipeline; then
   if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
-    echo 'Local builds require presence of deploy.env'
-    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
+    echo 'o ---> Local builds require presence of deploy.env' >&2
+    echo 'o ---> Copy deploy.env.template to deploy.env and modify as appropriate' >&2
     exit 1
   fi
   source "${BASE_DIR}/ansible/deploy.env"
 fi
 
 echo
-echo "Starting deployment"
-echo "---> Target host: ${DEPLOY_HOST}"
+echo "o ---> Starting deployment"
+echo "o ---> Target host: ${DEPLOY_HOST}"
 
-echo "---> Performing pre-deployment cleanup"
+echo "o ---> Performing pre-deployment cleanup"
 "${BASE_DIR}/ansible/cleanup.sh"
 trap '"${BASE_DIR}/ansible/cleanup.sh"' EXIT
 "${BASE_DIR}/ansible/get-vault-token.sh"
 "${BASE_DIR}/ansible/pull-vault-secrets.sh"
 "${BASE_DIR}/ansible/set-image-version.sh"
 "${BASE_DIR}/ansible/playbook.sh"
-echo "---> Performing post-deployment cleanup"
+echo "o ---> Performing post-deployment cleanup"
 "${BASE_DIR}/ansible/cleanup.sh"
 
-echo 'Done'
+echo 'o ---> Done'

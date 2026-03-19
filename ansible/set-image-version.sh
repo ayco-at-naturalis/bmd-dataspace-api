@@ -23,12 +23,11 @@ source "${BASE_DIR}/build/functions.sh"
 source "${BASE_DIR}/ansible/functions.sh"
 
 if ! is_gitlab_pipeline; then
-  if [ ! -f "${BASE_DIR}/ansible/deploy.env" ]; then
-    echo 'Locally executed deployments require presence of deploy.env'
-    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
+  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+    echo 'o ---> Local builds require presence of deploy.env' >&2
+    echo 'o ---> Copy deploy.env.template to deploy.env and modify as appropriate' >&2
     exit 1
   fi
-  # deploy.env might specify a value for IMAGE_VERSION
   source "${BASE_DIR}/ansible/deploy.env"
 fi
 

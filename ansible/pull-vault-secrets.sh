@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-echo "Retrieving secrets"
+echo "o ---> Retrieving secrets"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -24,12 +24,12 @@ ANSIBLE_DIR="${BASE_DIR}/ansible"
 INVENTORY_DIR="${ANSIBLE_DIR}/inventory"
 
 if ! is_gitlab_pipeline; then
-  if [[ ! -f "${ANSIBLE_DIR}/deploy.env" ]]; then
-    echo 'Local builds require presence of deploy.env'
-    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
+  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+    echo 'o ---> Local builds require presence of deploy.env' >&2
+    echo 'o ---> Copy deploy.env.template to deploy.env and modify as appropriate' >&2
     exit 1
   fi
-  source "${ANSIBLE_DIR}/deploy.env"
+  source "${BASE_DIR}/ansible/deploy.env"
 fi
 
 source "${ANSIBLE_DIR}/functions.sh"
@@ -40,12 +40,12 @@ source "${ANSIBLE_DIR}/functions.sh"
 
 # TOKEN_FILE is defined in functions.sh
 if [[ ! -f "${TOKEN_FILE}" ]]; then
-	echo "Missing ${TOKEN_FILE}" >&2
-	echo "Run get-vault-roken.sh first" >&2
+	echo "o ---> Missing ${TOKEN_FILE}" >&2
+	echo "o ---> Run get-vault-token.sh first" >&2
 	exit 1
 fi
 
-echo "---> Deleting old secrets"
+echo "o ---> Deleting old secrets"
 rm -rf "${INVENTORY_DIR}/group_vars" \
 	"${INVENTORY_DIR}/host_vars" \
 	"${ANSIBLE_DIR}/ssh"
@@ -54,9 +54,9 @@ mkdir -p "${INVENTORY_DIR}/group_vars" \
 	"${INVENTORY_DIR}/host_vars" \
 	"${ANSIBLE_DIR}/ssh"
 
-echo "---> Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
+echo "o ---> Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
 ANSIBLE_GROUPS="$(get_ansible_groups "${DEPLOY_HOST}")"
-echo "---> Host \"${DEPLOY_HOST}\" belongs to these groups: ${ANSIBLE_GROUPS:-(none)}"
+echo "o ---> Host \"${DEPLOY_HOST}\" belongs to these groups: ${ANSIBLE_GROUPS:-(none)}"
 
 # group_vars
 get_secret_as_json "cicd/group_vars/all" "${INVENTORY_DIR}/group_vars/all.json"
@@ -84,3 +84,5 @@ ANSIBLE_DEPLOY_KEY="$(jq -e -r ".ANSIBLE_DEPLOY_KEY" "${output_file}")"
 [[ -z "${ANSIBLE_DEPLOY_KEY:-}" ]] && echo "ERROR: Unable to read SSH key" >&2 && exit 1
 echo "${ANSIBLE_DEPLOY_KEY}" > "${ANSIBLE_DIR}/ssh/id_ed25519"
 chmod 0400 "${ANSIBLE_DIR}/ssh/id_ed25519"
+
+echo 'o ---> All secrets retrieved and processed'

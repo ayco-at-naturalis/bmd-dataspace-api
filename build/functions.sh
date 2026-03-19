@@ -2,7 +2,7 @@
 
 require_function() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    printf '%s\n' "Missing required function: $1" && exit 1
+    printf '%s\n' "o ---> Missing required function: $1" && exit 1
   fi
 }
 

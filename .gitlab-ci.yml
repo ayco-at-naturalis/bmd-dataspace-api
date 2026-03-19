@@ -191,7 +191,8 @@ deploy_development:
   services:
     - docker:${DIND_VERSION}-dind
   script:
-    - echo "$VAULT_ID_TOKEN" | cut -d'.' -f2 | base64 -d 2>/dev/null | jq .
+    - PAYLOAD=$(echo "$VAULT_ID_TOKEN" | cut -d'.' -f2 | tr '_-' '/+')
+    - echo "${PAYLOAD}==" | base64 -d 2>/dev/null | jq .
     - ansible/deploy.sh
 
 deploy_production:

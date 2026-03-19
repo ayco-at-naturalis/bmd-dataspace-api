@@ -20,8 +20,8 @@ fi
 
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/build/build.env" ]; then
-    echo 'Local builds require presence of build.env'
-    echo 'Copy build.env.template to build.env and modify as appropriate'
+    echo 'o ---> Local builds require presence of build.env' >&2
+    echo 'o ---> Copy build.env.template to build.env and modify as appropriate' >&2
     exit 1
   fi
   . "${BASE_DIR}/build/build.env"

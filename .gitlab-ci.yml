@@ -2,10 +2,10 @@ variables:
   # Version of docker-dind and docker-cli-extras image
   DIND_VERSION: 28.4.0
   # HC Vault
+  VAULT_SERVER_URL: "https://vault.naturalis.io"
   SERVICE_DOMAIN: bii
   SERVICE_NAME: bmd
   VAULT_AUTH_ROLE: "jwt-${SERVICE_NAME}"
-  VAULT_SERVER_URL: "https://vault.naturalis.io"
   VAULT_PATH: "${SERVICE_DOMAIN}/${SERVICE_NAME}"
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
 

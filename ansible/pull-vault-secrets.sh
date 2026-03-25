@@ -56,9 +56,9 @@ mkdir -p "${INVENTORY_DIR}/group_vars" \
 
 echo "o ---> Retrieving Ansible groups for host \"${DEPLOY_HOST}\""
 ANSIBLE_GROUPS="$(get_ansible_groups "${DEPLOY_HOST}")"
-echo "o ---> Host \"${DEPLOY_HOST}\" belongs to these groups: ${ANSIBLE_GROUPS:-(none)}"
+echo "o ---> Host \"${DEPLOY_HOST}\" is listed under these groups in hosts.yml : ${ANSIBLE_GROUPS:-(none)}"
 
-# group_vars
+# group_vars (we always check for the presence of an "all" secret in HC Vault)
 get_secret_as_json "cicd/group_vars/all" "${INVENTORY_DIR}/group_vars/all.json"
 for group in ${ANSIBLE_GROUPS:-}; do
 	get_secret_as_json "cicd/group_vars/${group}" "${INVENTORY_DIR}/group_vars/${group}.json"
@@ -67,9 +67,10 @@ done
 # host_vars
 get_secret_as_json "cicd/host_vars/${DEPLOY_HOST}" "${INVENTORY_DIR}/host_vars/${DEPLOY_HOST}.json"
 
-# AWS credentials. NOTE: aws.json matches the name of an Ansible group (aws) in
-# hosts.yml. Therefore Ansible will read and expose aws.json if it is present in
-# the group_vars directory
+# AWS credentials. These are not managed and maintained by devs (inside the cicd
+# folder) but by infra (inside the tenants/letsencrypt folder). NOTE: aws.json
+# matches the name of an Ansible group (aws) in hosts.yml. Therefore Ansible will
+# read and expose aws.json if it is present in the group_vars directory.
 output_file="${INVENTORY_DIR}/group_vars/aws.json"
 get_secret_as_json "tenant/letsencrypt" "${output_file}"
 [[ ! -f "${output_file}" ]] && echo "ERROR: Missing AWS credentials" >&2 && exit 1

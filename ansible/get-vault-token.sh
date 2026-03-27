@@ -32,6 +32,8 @@ fi
 
 source "${BASE_DIR}/ansible/functions.sh"
 
+: "${VAULT_SERVER_URL:?Missing value for VAULT_SERVER_URL}"
+
 if is_gitlab_pipeline; then
   # Rely on variables being set in .gitlab-ci.yml
   JSON_BODY=$(jq -nc --arg role "$VAULT_AUTH_ROLE" --arg jwt "$VAULT_ID_TOKEN" '{role:$role,jwt:$jwt}')

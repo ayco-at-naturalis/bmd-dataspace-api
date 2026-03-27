@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [ -z "${BASE_DIR:-}" ]; then
-  echo "functions.sh requires BASE_DIR to be set" >&2
+  echo "o ---> ERROR: functions.sh requires BASE_DIR to be set" >&2
   exit 1
 fi
 
@@ -26,6 +26,15 @@ VERSION_FILE="${ANSIBLE_DIR}/.image-version"
 # ${ANSIBLE_DIR} (with ${ANSIBLE_DIR} being mapped to /gateway).
 INVENTORY_FILE=".inventory.json"
 
+
+trim() {
+  local value="${1:?trim(): missing argument}"
+  # Trim leading whitespace
+  value="${value#"${value%%[![:space:]]*}"}"
+  # Trim trailing whitespace
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "${value}"
+}
 
 # Prints a space-separated list of all groups within hosts.yml file that contain
 # the specified host (either directly or indirectly). The implicit "all" and

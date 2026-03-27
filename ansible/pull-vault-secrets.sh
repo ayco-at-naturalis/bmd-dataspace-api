@@ -73,16 +73,16 @@ get_secret_as_json "cicd/host_vars/${DEPLOY_HOST}" "${INVENTORY_DIR}/host_vars/$
 # read and expose aws.json if it is present in the group_vars directory.
 output_file="${INVENTORY_DIR}/group_vars/aws.json"
 get_secret_as_json "tenant/letsencrypt" "${output_file}"
-[[ ! -f "${output_file}" ]] && echo "ERROR: Missing AWS credentials" >&2 && exit 1
+[[ ! -f "${output_file}" ]] && echo "o ---> ERROR: Missing AWS credentials" >&2 && exit 1
 
 # SSH key for Ansible
 output_file="${ANSIBLE_DIR}/ssh/ssh.json"
 get_secret_as_json "cicd/ssh" "${output_file}"
-[[ ! -f "${output_file}" ]] && echo "ERROR: Missing SSH key" >&2 && exit 1
+[[ ! -f "${output_file}" ]] && echo "o ---> ERROR: Missing SSH key" >&2 && exit 1
 
 # Generate an id_ed25519 file using ssh.json
 ANSIBLE_DEPLOY_KEY="$(jq -e -r ".ANSIBLE_DEPLOY_KEY" "${output_file}")"
-[[ -z "${ANSIBLE_DEPLOY_KEY:-}" ]] && echo "ERROR: Unable to read SSH key" >&2 && exit 1
+[[ -z "${ANSIBLE_DEPLOY_KEY:-}" ]] && echo "o ---> ERROR: Unable to read SSH key" >&2 && exit 1
 echo "${ANSIBLE_DEPLOY_KEY}" > "${ANSIBLE_DIR}/ssh/id_ed25519"
 chmod 0400 "${ANSIBLE_DIR}/ssh/id_ed25519"
 

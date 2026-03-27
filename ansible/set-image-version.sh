@@ -46,9 +46,11 @@ if [ -z "${IMAGE_VERSION-}" ]; then
   if [ -n "${CI_COMMIT_TAG-}" ]; then
     IMAGE_VERSION="${CI_COMMIT_TAG}"
   else
-    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
+    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}"
   fi
 fi
 
 mkdir -p "$(dirname "$VERSION_FILE")" # VERSION_FILE is defined in ansible/functions.sh
 printf '%s' "$IMAGE_VERSION" > "$VERSION_FILE"
+
+echo "o ---> Image version to be deployed: \"${IMAGE_VERSION}"

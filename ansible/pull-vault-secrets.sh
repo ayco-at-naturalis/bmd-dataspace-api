@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # pull-vault-secrets.sh
 # Reads secrets from HC Vault for host $DEPLOY_HOST. DEPLOY_HOST must be

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # get-vault-token.sh
 # Retrieves an HC Vault token and saves it to ansible/.vault-token. If that

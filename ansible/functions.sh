@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 if [ -z "${BASE_DIR:-}" ]; then
   echo "o ---> ERROR: functions.sh requires BASE_DIR to be set" >&2

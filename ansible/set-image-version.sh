@@ -6,7 +6,7 @@
 
 set -eu
 
-echo "Identifying Docker image to be deployed"
+echo "o ---> Identifying Docker image to be deployed"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {

@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-echo "o ---> Executing deployment playbook"
+echo "o ---> Executing deployment Ansible playbook"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {

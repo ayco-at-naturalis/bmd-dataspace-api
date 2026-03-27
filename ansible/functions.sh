@@ -41,7 +41,7 @@ trim() {
 # "ungrouped" groups are excluded from the list. The printed groups are used to
 # look up identically named secrets in HC Vault.
 get_ansible_groups() { # hostname
-  local hostname="$1"
+  local hostname="${1:?get_ansible_groups(): missing argument}"
   if ! is_valid_host "${hostname}"; then
     echo "o ---> No such host: ${hostname}" >&2
     return 1

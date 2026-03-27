@@ -103,15 +103,16 @@ _to_slug() {
 }
 
 is_valid_image_tag() { # tag
-  : "${1?No argument specified for is_valid_image_tag}"
+  : "${1?is_valid_image_tag(): missing argumnent}"
   tag="$1"
-  echo "o ---> Searching for tag \"$tag\" in container registry"
+  echo "o ---> Searching for image \"$tag\" in container registry"
   docker_login
-  if docker manifest inspect "${CI_REGISTRY_IMAGE}:${tag}" >/dev/null 2>&1; then
-    echo "o ---> Tag found"
+  image="${CI_REGISTRY_IMAGE}:${tag}"
+  if docker manifest inspect "${image}" >/dev/null 2>&1; then
+    echo "o ---> Image found"
     return 0
   else
-    echo "o ---> No such tag"
+    echo "o ---> No such image: \"${image}\""
     return 1
   fi
 }
@@ -121,7 +122,7 @@ is_repository_dirty() {
 }
 
 docker_login() {
-  echo 'o ---> Authenticating with GitLab container registry'
+  echo 'o ---> Authenticating with container registry'
   if is_gitlab_pipeline; then
     : "${CI_JOB_TOKEN:?Missing value for CI_JOB_TOKEN}"
     : "${CI_REGISTRY:?Missing value for CI_REGISTRY}"

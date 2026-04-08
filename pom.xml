@@ -6,7 +6,7 @@
 
     <groupId>eu.bmd-project</groupId>
     <artifactId>bmd-dataspace-api</artifactId>
-    <version>0.0.5</version>
+    <version>0.0.8</version>
     <name>BMD Dataspace API</name>
     <description>BMD Dataspace API</description>
 
@@ -19,7 +19,7 @@
     </repositories>
 
     <properties>
-        <java.version>24</java.version>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- ==================================================================== -->
@@ -44,8 +44,8 @@
         <!-- *** Check for updates: mvn versions:display-dependency-updates   *** -->
         <!-- *** Check dependencies: mvn dependency:analyze                   *** -->
         <!-- ==================================================================== -->
-        <spring.boot.version>4.0.3</spring.boot.version>
-        <gt-bom.version>34.2</gt-bom.version>
+        <spring.boot.version>4.0.5</spring.boot.version>
+        <gt-bom.version>34.3</gt-bom.version>
         <springdoc-openapi.version>3.0.2</springdoc-openapi.version>
         <apache-jena.version>6.0.0</apache-jena.version>
         <klojang.version>24.2.0</klojang.version>
@@ -54,7 +54,7 @@
         <unit-api.version>2.2</unit-api.version>
         <commons-collections4.version>4.5.0</commons-collections4.version>
         <commons-io.version>2.21.0</commons-io.version>
-        <error_prone_annotations.version>2.48.0</error_prone_annotations.version>
+        <error_prone_annotations.version>2.49.0</error_prone_annotations.version>
         <mockwebserver.version>5.3.2</mockwebserver.version>
 
         <!--
@@ -65,9 +65,9 @@
         -->
         <surefire.argLine/>
 
-        <jackson-bom.version>3.1.0</jackson-bom.version>
+        <jackson-bom.version>3.1.1</jackson-bom.version>
         <aircompressor.version>2.0.3</aircompressor.version>
-        <jackson2-core.version>2.21.1</jackson2-core.version>
+        <jackson2-core.version>2.21.2</jackson2-core.version>
     </properties>
 
     <dependencyManagement>

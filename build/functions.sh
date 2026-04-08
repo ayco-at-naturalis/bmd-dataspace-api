@@ -70,7 +70,7 @@ add_tag() { #tag
 # Executes Maven in a standardized way. Pass the desired Maven goals
 # as arguments to this function. For example:
 #   run_maven clean install
-run_maven() { # goal1, goal2, ...
+run_maven() { # goal1 goal2 ...
   : "{BASE_DIR:?Missing value for BASE_DIR}"
   # JVM options:
   export MAVEN_OPTS="${MAVEN_OPTS-} --enable-native-access=ALL-UNNAMED"

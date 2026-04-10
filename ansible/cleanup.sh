@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # cleanup.sh
 # Cleans up directories and files created during the deployment. These

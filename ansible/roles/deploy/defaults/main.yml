@@ -12,14 +12,14 @@ data_dir: "/data/bmd"
 # located in the ansible directory.
 repo_root: "{{ playbook_dir }}/.."
 
-# Lists all files, relativer to the repository's root directory, that
+# Lists all files, relative to the repository's root directory, that
 # must be pushed to the remote host
 deployed_files:
   - "docker-compose.yml"
   - "docker-compose.traefik.yml"
   - "logback-spring.xml"
 
-# Lists all shell scripts and other executable that must be pushed
+# Lists all shell scripts and other executables that must be pushed
 deployed_executables:
   - "docker-blowtorch.sh"
 

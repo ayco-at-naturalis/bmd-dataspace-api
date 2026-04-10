@@ -1,5 +1,5 @@
 ---
-# Verify presence of required direcotries on remote host. Create
+# Verify presence of required directories on remote host. Create
 # them if absent.
 
 - name: "Ensure presence of {{ deploy_dir }}"

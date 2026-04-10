@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -euo pipefail
 
@@ -15,20 +15,20 @@ fi
 
 . "${BASE_DIR}/build/functions.sh"
 
-echo 'Executing Maven build'
+echo 'o ---> Executing Maven build'
 
 if [[ ! -d "${BASE_DIR}/build/mvn-repo" ]]; then
-  echo '---> Creating local Maven repository'
+  echo 'o ---> Creating local Maven repository'
   mkdir "${BASE_DIR}/build/mvn-repo"
 fi
 
-echo '---> Creating Java classpath directories'
+echo 'o ---> Creating Java classpath directories'
 rm -rf "${BASE_DIR}/build/dependencies"
 rm -rf "${BASE_DIR}/build/app"
 mkdir "${BASE_DIR}/build/dependencies"
 mkdir "${BASE_DIR}/build/app"
 
-echo '---> Starting build'
+echo 'o ---> Starting build'
 run_maven clean install
 
 echo

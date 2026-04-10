@@ -6,7 +6,7 @@
 
 set -eu
 
-echo "Identifying Docker image to be deployed"
+echo "o ---> Identifying Docker image to be deployed"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -23,12 +23,11 @@ source "${BASE_DIR}/build/functions.sh"
 source "${BASE_DIR}/ansible/functions.sh"
 
 if ! is_gitlab_pipeline; then
-  if [ ! -f "${BASE_DIR}/ansible/deploy.env" ]; then
-    echo 'Locally executed deployments require presence of deploy.env'
-    echo 'Copy deploy.env.template to deploy.env and modify as appropriate'
+  if [[ ! -f "${BASE_DIR}/ansible/deploy.env" ]]; then
+    echo 'o ---> Local builds require presence of deploy.env' >&2
+    echo 'o ---> Copy deploy.env.template to deploy.env and modify as appropriate' >&2
     exit 1
   fi
-  # deploy.env might specify a value for IMAGE_VERSION
   source "${BASE_DIR}/ansible/deploy.env"
 fi
 
@@ -47,9 +46,11 @@ if [ -z "${IMAGE_VERSION-}" ]; then
   if [ -n "${CI_COMMIT_TAG-}" ]; then
     IMAGE_VERSION="${CI_COMMIT_TAG}"
   else
-    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
+    IMAGE_VERSION="${CI_COMMIT_REF_SLUG}"
   fi
 fi
 
 mkdir -p "$(dirname "$VERSION_FILE")" # VERSION_FILE is defined in ansible/functions.sh
 printf '%s' "$IMAGE_VERSION" > "$VERSION_FILE"
+
+echo "o ---> Image version to be deployed: \"${IMAGE_VERSION}"

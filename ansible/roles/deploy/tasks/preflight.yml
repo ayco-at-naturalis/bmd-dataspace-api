@@ -1,5 +1,5 @@
 ---
-# Execute prelimnary checks
+# Execute preliminary checks
 
 - name: Verify docker is installed and in PATH
   ansible.builtin.shell: "command -v docker"

@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 if [ -z "${BASE_DIR:-}" ]; then
-  echo "functions.sh requires BASE_DIR to be set" >&2
+  echo "o ---> ERROR: functions.sh requires BASE_DIR to be set" >&2
   exit 1
 fi
 
@@ -27,14 +27,23 @@ VERSION_FILE="${ANSIBLE_DIR}/.image-version"
 INVENTORY_FILE=".inventory.json"
 
 
+trim() {
+  local value="${1:?trim(): missing argument}"
+  # Trim leading whitespace
+  value="${value#"${value%%[![:space:]]*}"}"
+  # Trim trailing whitespace
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "${value}"
+}
+
 # Prints a space-separated list of all groups within hosts.yml file that contain
 # the specified host (either directly or indirectly). The implicit "all" and
 # "ungrouped" groups are excluded from the list. The printed groups are used to
 # look up identically named secrets in HC Vault.
 get_ansible_groups() { # hostname
-  local hostname="$1"
+  local hostname="${1:?get_ansible_groups(): missing argument}"
   if ! is_valid_host "${hostname}"; then
-    echo "No such host: ${hostname}" >&2
+    echo "o ---> No such host: ${hostname}" >&2
     return 1
   fi
   list_ansible_groups;
@@ -100,7 +109,7 @@ get_secret_as_json() { # secret_name, output_file
   local endpoint="${hc_vault_base}/${secret}"
   local token="$(<"${TOKEN_FILE}")"
 
-  echo "Retrieving secret \"${secret}\""
+  echo "o ---> Retrieving secret \"${secret}\""
 
   # Get response body __and__ HTTP status code in one CURL request
   # by appending (-w) the HTTP status code to response body
@@ -114,12 +123,12 @@ get_secret_as_json() { # secret_name, output_file
     # Only write a file if there are keys under .data.data
     if jq -e '.data.data | length > 0' >/dev/null 2>&1 <<< "$body"; then
       jq '.data.data' <<< "$body" > "${save_as}"
-      echo "---> Secret saved"
+      echo "o ---> Secret saved"
     else
-      echo "---> Empty secret"
+      echo "o ---> Empty secret"
     fi
   elif [[ $status -eq 404 ]]; then
-    echo "---> No secret there"
+    echo "o ---> No secret there"
   else
     echo "$body" >&2 # E.g. "403 Permission Denied"
     echo >&2
@@ -155,7 +164,7 @@ ensure_vault_cli() {
   # From here onward, if anything goes wrong, delete $vault_dir again, so
   # next time we will at least try again.
   trap 'rc=$?; if [ $rc -ne 0 ]; then rm -rf "$vault_dir"; fi; exit $rc' 0 INT TERM HUP
-  echo "---> Bootstrapping HC Vault CLI from $vault_dir"
+  echo "o ---> Bootstrapping HC Vault CLI from $vault_dir"
   url="$VAULT_CLI_DOWNLOAD_URL"
   zip_name="${url##*/}"
   zip_path="${vault_dir}/${zip_name}"
@@ -185,7 +194,7 @@ ensure_jq() {
   fi
   mkdir -p "$jq_dir"
   trap 'rc=$?; if [ $rc -ne 0 ]; then rm -rf "$jq_dir"; fi; exit $rc' 0 INT TERM HUP
-  echo "---> Bootstrapping jq from $jq_dir"
+  echo "o ---> Bootstrapping jq from $jq_dir"
   url="$JQ_DOWNLOAD_URL"
   dl_name="${url##*/}"
   dl_path="${jq_dir}/${dl_name}"

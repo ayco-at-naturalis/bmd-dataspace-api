@@ -7,7 +7,7 @@
 
 set -eu
 
-echo "Generating version-info.json"
+echo "o ---> Generating version-info.json"
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -33,8 +33,8 @@ fi
 
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/build/build.env" ]; then
-    echo 'Local builds require presence of build.env'
-    echo 'Copy build.env.template to build.env and modify as appropriate'
+    echo 'Local builds require presence of build.env' >&2
+    echo 'Copy build.env.template to build.env and modify as appropriate' >&2
     exit 1
   fi
   . "${BASE_DIR}/build/build.env"
@@ -76,5 +76,5 @@ EOF
 cat "${OUTPUT_FILE}"
 
 echo
-echo "---> version-info.json generated successfully"
+echo "o ---> version-info.json generated successfully"
 echo

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:24-jre-noble
+FROM eclipse-temurin:25-jre-noble
 
 ENV LANG=en_US.UTF-8
 
@@ -22,7 +22,7 @@ ENTRYPOINT ["java"]
 
 # NOTE: We must add both /opt/app/ and /opt/app/* to the classpath! /opt/app/
 #       ensures that version-info.json will be picked using Class::getResource.
-#       /opt/app/* tells the JVM als jar files in there count as class path items.
+#       /opt/app/* tells the JVM all jar files in there count as class path items.
 CMD [ "-Dfile.encoding=UTF-8", \
       "-Dlogging.config=/logback-spring.xml", \
       "-cp", "/opt/classpath/*:/opt/app/:/opt/app/*", \

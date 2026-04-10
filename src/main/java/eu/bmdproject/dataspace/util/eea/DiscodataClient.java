@@ -17,6 +17,9 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+/**
+ * Responsible for queries against EEA's <a href="https://discodata.eea.europa.eu/">Discodata</a> API.
+ */
 @Component
 public class DiscodataClient {
 
@@ -33,10 +36,8 @@ public class DiscodataClient {
   }
 
   /**
-   * Executes a DISCODATA SQL query and returns the raw JSON response body.
-   *
-   * <p>Throws DaoException on non-2xx responses (including 404) or on timeout.
-   * Does not attempt to interpret the JSON.</p>
+   * Executes a Discodata query and returns the raw JSON response body. Throws DaoException on any non-2xx
+   * response (including 404) or on timeout. Does not attempt to interpret the JSON.
    */
   public byte[] executeQuery(String endpoint, String sql) {
     final URI uri = UriComponentsBuilder
@@ -52,8 +53,8 @@ public class DiscodataClient {
           .accept(MediaType.APPLICATION_JSON)
           .retrieve()
           .onStatus(HttpStatusCode::isError, (_, response) -> {
-            // Any HTTP error is unexpected in DAO-land for this integration at MVP stage.
-            // Specifically: 404 should NOT map to our REST NotFoundException.
+            // Any HTTP error is unexpected in DAO-land. Specifically: 404 should NOT map
+            // to our REST NotFoundException.
             int status = response.getStatusCode().value();
             throw new DaoException("Request returned HTTP " + status + " for " + uri);
           })

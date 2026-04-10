@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # tag-image.sh
-# Adds various tags to the image created by create-image.sh
+# Adds various extra tags to the image created by create-image.sh
 
-set -euo pipefail
+set -eu
 
 # Are we running inside a GitLab pipeline?
 is_gitlab_pipeline() {
@@ -20,56 +20,43 @@ fi
 
 if ! is_gitlab_pipeline; then
   if [ ! -f "${BASE_DIR}/build/build.env" ]; then
-    echo 'Local builds require presence of build.env'
-    echo 'Copy build.env.template to build.env and modify as appropriate'
+    echo 'o ---> Local builds require presence of build.env' >&2
+    echo 'o ---> Copy build.env.template to build.env and modify as appropriate' >&2
     exit 1
   fi
   . "${BASE_DIR}/build/build.env"
 fi
 
-if ! is_gitlab_pipeline; then
-  CI_COMMIT_REF_SLUG="$(get_commit_ref_slug)" # defined in functions.sh
-  CI_COMMIT_SHA=$(git -C "${BASE_DIR}" log -n 1 --pretty=format:'%H')
-  CI_COMMIT_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
+echo "o ---> Tagging Docker image for commit \"$(get_commit_short_sha)\""
+
+docker_login
+
+base_image="$(get_base_image)"
+echo "o ---> Pulling ${base_image}"
+docker pull "${base_image}"
+
+# Add tag named after the git branch
+add_tag "$(get_commit_ref_slug)"
+
+# If this is a tagged commit, add an image tag named after the git tag
+tag="$(get_commit_tag)"
+if [ -n "${tag}" ]; then
+  add_tag "${tag}"
 fi
 
-echo "Tagging Docker image for commit \"${CI_COMMIT_SHA}\""
-
-COMMIT_HASH_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}_${CI_COMMIT_SHA}"
-
-echo '---> Authenticating with GitLab container registry'
-echo -n "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
-
-echo "---> Pulling ${COMMIT_HASH_IMAGE}"
-docker pull "${COMMIT_HASH_IMAGE}"
-
-echo "---> Adding tag \"${CI_COMMIT_REF_SLUG}\""
-docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
-docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}"
-
-if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
-  echo "---> Adding tag \"${CI_COMMIT_TAG}\""
-  docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
-  docker push "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
-  exit 0
+# EXTRA_IMAGE_TAG can optionally be specified in .gitlab-ci.yml, or as
+# as pipeline variable, or in build.env
+tag="${EXTRA_IMAGE_TAG-}"
+if [ -n "${EXTRA_IMAGE_TAG-}" ]; then
+  add_tag "${tag}"
 fi
 
-# EXTRA_IMAGE_TAG can optionally be defined in build.env
-if [[ -n "${EXTRA_IMAGE_TAG:-}" ]]; then
-  tag=${EXTRA_IMAGE_TAG}
-  echo "---> Adding tag \"${tag}\""
-  docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:${tag}"
-  docker push "${CI_REGISTRY_IMAGE}:${tag}"
-fi
-
-if [[ "${CI_COMMIT_REF_SLUG}" = "main" ]]; then
-  echo "---> Adding tag \"latest\""
-  docker tag "${COMMIT_HASH_IMAGE}" "${CI_REGISTRY_IMAGE}:latest"
-  docker push "${CI_REGISTRY_IMAGE}:latest"
+if [ "$(get_commit_ref_slug)" = "main" ]; then
+  add_tag "latest"
 fi
 
 echo
-echo "---> Image tags successfully added"
+echo "o ---> Image tags successfully added"
 echo
 
 if ! is_gitlab_pipeline && is_repository_dirty; then

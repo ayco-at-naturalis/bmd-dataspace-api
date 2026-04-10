@@ -2,10 +2,10 @@ variables:
   # Version of docker-dind and docker-cli-extras image
   DIND_VERSION: 28.4.0
   # HC Vault
-  SERVICE_NAME: bmd
-  SERVICE_DOMAIN: bii
-  VAULT_AUTH_ROLE: "jwt-${SERVICE_NAME}"
   VAULT_SERVER_URL: "https://vault.naturalis.io"
+  SERVICE_DOMAIN: bii
+  SERVICE_NAME: bmd
+  VAULT_AUTH_ROLE: "jwt-${SERVICE_NAME}"
   VAULT_PATH: "${SERVICE_DOMAIN}/${SERVICE_NAME}"
   TRIVY_DB_REPOSITORY: "aquasec/trivy-db:2"
 
@@ -14,11 +14,9 @@ variables:
     VAULT_ID_TOKEN:
       aud: https://${CI_SERVER_HOST}
 
-# If we are going to deploy a pre-built image (i.e. already built in a previous
-# pipeline), then skip all build-like jobs. Deploying a pre-built, immutable image
-# is generally called "image promotion" - build & deploy on dev; deploy as-is on
-# prod. Strictly speaking we do not enforce immutability yet. Users might specify
-# (for exammple) "latest" as the IMAGE_VERSION to be deployed.
+# If we are going to deploy a pre-existing image, also known as image promotion,
+# then we skip all build-like jobs. We build-and-deploy to DEV, but we only deploy
+# a pre-built image to PROD.
 .no_image_promotion: &no_image_promotion
   - if: '$IMAGE_VERSION'
     when: never
@@ -44,7 +42,7 @@ stages:
 cache:
   key: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_SLUG}
   paths:
-    - docker/mvn-repo
+    - build/mvn-repo
 
 include:
   - template: Security/Secret-Detection.gitlab-ci.yml
@@ -105,14 +103,13 @@ generate_version_info:
     paths:
       - build/app
 
-
 create_image:
   stage: "Create Image"
   rules:
     *no_image_promotion
-  image:
-    name: gcr.io/kaniko-project/executor:debug
-    entrypoint: [""]
+  image: registry.gitlab.com/naturalis/lib/docker-cli-extras:${DIND_VERSION}-cli
+  services:
+    - docker:${DIND_VERSION}-dind
   script:
     - build/create-image.sh
 
@@ -195,7 +192,6 @@ deploy_development:
     - docker:${DIND_VERSION}-dind
   script:
     - ansible/deploy.sh
-
 
 deploy_production:
   <<: *job_id_tokens

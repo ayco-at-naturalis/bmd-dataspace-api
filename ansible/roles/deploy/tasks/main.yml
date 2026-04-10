@@ -3,7 +3,7 @@
   ansible.builtin.import_tasks: preflight.yml
 
 - name: Check directories
-  ansible.builtin.import_tasks: check-directories.yml
+  ansible.builtin.import_tasks: mkdir.yml
 
 - name: Push files
   ansible.builtin.import_tasks: push-files.yml

@@ -29,7 +29,7 @@ if ! is_gitlab_pipeline; then
     echo 'o ---> Copy deploy.env.template to deploy.env and modify as appropriate' >&2
     exit 1
   fi
-  source "${BASE_DIR}/ansible/deploy.env"
+  source "${ANSIBLE_DIR}/deploy.env"
 fi
 
 source "${ANSIBLE_DIR}/functions.sh"

@@ -41,7 +41,7 @@ docker build \
     "${BASE_DIR}/build"
 echo 'o ---> Image created. Pushing image to container registry'
 docker_login
-docker push "${base_image}"
+docker image push "${base_image}"
 echo
 echo 'o ---> Image successfully created and pushed'
 echo

@@ -18,7 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 /**
- * Responsible for queries against EEA's <a href="https://discodata.eea.europa.eu/">Discodata</a> API.
+ * Responsible for queries against EEA's <a href="https://discodata.eea.europa.eu/">Discodata</a> API. This
+ * class essentially is a {@link RestClient} wrapper specifically for the Discodata API. Note that, except for
+ * a bit of data normalization, the BMD Dataspace API here simply functions as a pass-through for data coming
+ * back from the Discodata API (BISE and EUNIS data). We are completely reliant on _that_ API functioning
+ * properly, and we need to distinguish between "something going wrong there" and more fine-grained error
+ * conditions in our own handling of the request.
  */
 @Component
 public class DiscodataClient {
@@ -30,8 +35,12 @@ public class DiscodataClient {
   private final RestClient restClient;
 
   public DiscodataClient() {
+    this(TIMEOUT_MS);
+  }
+
+  DiscodataClient(int timeout) {
     this.restClient = RestClient.builder()
-        .requestFactory(createRequestFactory())
+        .requestFactory(createRequestFactory(timeout))
         .build();
   }
 
@@ -53,38 +62,35 @@ public class DiscodataClient {
           .accept(MediaType.APPLICATION_JSON)
           .retrieve()
           .onStatus(HttpStatusCode::isError, (_, response) -> {
-            // Any HTTP error is unexpected in DAO-land. Specifically: 404 should NOT map
-            // to our REST NotFoundException.
             int status = response.getStatusCode().value();
             throw new DaoException("Request returned HTTP " + status + " for " + uri);
           })
           .body(byte[].class);
     } catch (ResourceAccessException e) {
-      // Spring commonly wraps connect/read timeouts as ResourceAccessException.
       if (isTimeout(e)) {
-        throw new DaoException("Request timed out after " + (TIMEOUT_MS / 1000.0) + "s: " + uri, e);
+        throw new DaoException("Request timed out: " + uri, e);
       }
       throw new DaoException("Request failed (I/O): " + uri, e);
     } catch (RestClientException e) {
-      // Covers other client-side failures (conversion issues, etc.). We treat as DAO failure.
       throw new DaoException("Request failed: " + uri, e);
     }
   }
 
-  private static SimpleClientHttpRequestFactory createRequestFactory() {
+  private static SimpleClientHttpRequestFactory createRequestFactory(int timeout) {
     SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-    f.setConnectTimeout(TIMEOUT_MS);
-    f.setReadTimeout(TIMEOUT_MS);
+    f.setConnectTimeout(timeout);
+    f.setReadTimeout(timeout);
     return f;
   }
 
   private static boolean isTimeout(Throwable t) {
+    // Spring commonly wraps connect/read timeouts as ResourceAccessException. Also,
+    // some stacks throw plain "timeout" IOExceptions without SocketTimeoutException;
+    // keep this conservative to avoid misclassifying unrelated IO failures.
     for (Throwable cur = t; cur != null; cur = cur.getCause()) {
       if (cur instanceof SocketTimeoutException) {
         return true;
       }
-      // Some stacks throw plain "timeout" IOExceptions without SocketTimeoutException;
-      // keep this conservative to avoid misclassifying unrelated IO failures.
       String msg = cur.getMessage();
       if (msg != null && msg.toLowerCase().contains("timed out")) {
         return true;

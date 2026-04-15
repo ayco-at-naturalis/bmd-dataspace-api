@@ -33,8 +33,8 @@ mkdir "${BASE_DIR}/public"
 
 run_maven 'javadoc:javadoc'
 
-cp -r "${BASE_DIR}/target/site/apidocs/"* "${BASE_DIR}/public/"
+cp -r "${BASE_DIR}/target/site/apidocs/"* "${BASE_DIR}/public/v1/javadocs"
 
 echo
-echo 'o ---> Javadocs published successfully. See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/'
+echo 'o ---> Javadocs published successfully. See https://naturalis.gitlab.io/bii/bmd/bmd-dataspace-api/v1/javadocs'
 echo

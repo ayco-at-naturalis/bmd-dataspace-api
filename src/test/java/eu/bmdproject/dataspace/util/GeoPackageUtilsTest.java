@@ -73,7 +73,7 @@ class GeoPackageUtilsTest {
     Path dbPath = tmp.resolve("test.gpkg");
     createTable(dbPath, "dummy", "id INTEGER");
     List<GeoPackageUtils.Column> cols = GeoPackageUtils.listColumns(dbPath, "it's_a_table");
-    assertTrue(cols.isEmpty());
+    assertThat(cols).isEmpty();
   }
 
   private static void createTable(Path dbPath, String tableName, String... columnDefs) throws Exception {

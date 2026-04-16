@@ -32,7 +32,7 @@ class GeoPackageUtilsTest {
     assertEquals(5, cols.size());
 
     GeoPackageUtils.Column id = cols.getFirst();
-    assertEquals("id", id.name());
+    assertThat("id").isEqualTo(id.name());
     assertEquals("INTEGER", id.type());
     assertEquals("1", id.pk());
 

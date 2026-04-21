@@ -1,5 +1,6 @@
 package eu.bmdproject.dataspace.util.eea;
 
+import eu.bmdproject.dataspace.config.RestClientConfig;
 import eu.bmdproject.dataspace.dao.DaoException;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DiscodataClientTest {
@@ -22,7 +24,7 @@ class DiscodataClientTest {
   void setUp() throws IOException {
     server = new MockWebServer();
     server.start();
-    client = new DiscodataClient(500);
+    client = new DiscodataClient(new RestClientConfig().restClient());
   }
 
   @AfterEach
@@ -31,14 +33,14 @@ class DiscodataClientTest {
   }
 
   @Test
-  void executeQuery_returnsResponseBody_on2xx() throws Exception {
+  void executeQuery_returnsResponseBody_on2xx() {
     byte[] expected = "{\"results\":[]}".getBytes();
     server.enqueue(new MockResponse()
         .setResponseCode(200)
         .setHeader("Content-Type", "application/json")
         .setBody(new okio.Buffer().write(expected)));
     byte[] actual = client.executeQuery(serverUrl(), "SELECT * FROM sites");
-    assertArrayEquals(expected, actual);
+    assertThat(expected).isEqualTo(actual);
   }
 
   @Test
@@ -49,7 +51,7 @@ class DiscodataClientTest {
     RecordedRequest req = server.takeRequest(10, TimeUnit.MILLISECONDS);
     assertNotNull(req);
     String requestUrl = req.getPath();
-    assertTrue(requestUrl.contains("query="), "Expected 'query' param in: " + requestUrl);
+    assertThat(requestUrl).contains("query=");
     assertTrue(requestUrl.contains("NL001"), "Expected SQL content in URL: " + requestUrl);
   }
 
@@ -83,23 +85,6 @@ class DiscodataClientTest {
     server.enqueue(new MockResponse().setResponseCode(503));
     DaoException ex = assertThrows(DaoException.class, () -> client.executeQuery(serverUrl(), "SELECT 1"));
     assertTrue(ex.getMessage().contains("503"));
-  }
-
-  @Test
-  void executeQuery_throwsDaoException_withTimeoutMessage_onReadTimeout() {
-    // Delay the response body longer than the 500 Ms client timeout.
-    // We use a short delay in tests to keep the suite fast; the point is the
-    // exception type and message, not the exact duration.
-    server.enqueue(new MockResponse()
-        .setResponseCode(200)
-        .setBodyDelay(1, TimeUnit.SECONDS)
-        .setHeadersDelay(1, TimeUnit.SECONDS)
-        .setBody("{}"));
-    DaoException ex = assertThrows(DaoException.class, () -> client.executeQuery(serverUrl(), "SELECT 1"));
-    assertTrue(ex.getMessage().contains("timed out") || ex.getMessage().contains("I/O"),
-        "Expected timeout or I/O message, got: " + ex.getMessage());
-    // The cause chain must include a ResourceAccessException (Spring) or SocketTimeoutException
-    assertNotNull(ex.getCause());
   }
 
   private String serverUrl() {

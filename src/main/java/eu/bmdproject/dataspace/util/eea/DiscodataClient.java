@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -15,7 +14,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 
 /**
  * Responsible for queries against EEA's <a href="https://discodata.eea.europa.eu/">Discodata</a> API. This
@@ -30,20 +28,11 @@ public class DiscodataClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(DiscodataClient.class);
 
-  private static final int TIMEOUT_MS = (int) Duration.ofSeconds(5).toMillis();
-
   private final RestClient restClient;
 
-  public DiscodataClient() {
-    this(TIMEOUT_MS);
+  public DiscodataClient(RestClient restClient) {
+    this.restClient = restClient;
   }
-
-  DiscodataClient(int timeout) {
-    this.restClient = RestClient.builder()
-        .requestFactory(createRequestFactory(timeout))
-        .build();
-  }
-
   /**
    * Executes a Discodata query and returns the raw JSON response body. Throws DaoException on any non-2xx
    * response (including 404) or on timeout. Does not attempt to interpret the JSON.
@@ -74,13 +63,6 @@ public class DiscodataClient {
     } catch (RestClientException e) {
       throw new DaoException("Request failed: " + uri, e);
     }
-  }
-
-  private static SimpleClientHttpRequestFactory createRequestFactory(int timeout) {
-    SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-    f.setConnectTimeout(timeout);
-    f.setReadTimeout(timeout);
-    return f;
   }
 
   private static boolean isTimeout(Throwable t) {

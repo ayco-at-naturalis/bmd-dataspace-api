@@ -8,8 +8,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class GlobalExceptionHandlerTest {
 
@@ -27,64 +26,62 @@ class GlobalExceptionHandlerTest {
     Map<String, Object> root = objectMapper.readValue(response.getBody(), Map.class);
     @SuppressWarnings("unchecked")
     Map<String, Object> errorNode = (Map<String, Object>) root.get("__ERROR__");
-    assertNotNull(errorNode, "__ERROR__ key must be present");
+    assertThat(errorNode).as("__ERROR__ key must be present").isNotNull();
     return (String) errorNode.get("message");
   }
 
   @Test
-  void notFoundException_returns404() {
-    ResponseEntity<String> response = handler.handle(new NotFoundException("Site NL0000001 not found"));
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  void notFoundException() throws Exception {
+    // Given
+    NotFoundException ex = new NotFoundException("Site NL0000001 not found");
+    // When
+    ResponseEntity<String> response = handler.handle(ex);
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(extractErrorMessage(response)).isEqualTo("Site NL0000001 not found");
   }
 
   @Test
-  void badRequestException_returns400() {
-    ResponseEntity<String> response = handler.handle(new BadRequestException("Invalid parameter"));
-    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  void badRequestException() throws Exception {
+    // Given
+    BadRequestException ex = new BadRequestException("Invalid parameter");
+    // When
+    ResponseEntity<String> response = handler.handle(ex);
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(extractErrorMessage(response)).isEqualTo("Invalid parameter");
   }
 
   @Test
-  void notImplementedException_returns501() {
-    ResponseEntity<String> response = handler.handle(new NotImplementedException());
-    assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+  void notImplementedException() throws Exception {
+    // Given
+    NotImplementedException ex = new NotImplementedException();
+    // When
+    ResponseEntity<String> response = handler.handle(ex);
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_IMPLEMENTED);
+    assertThat(extractErrorMessage(response)).isEqualTo("The requested functionality has not been implemented yet");
   }
 
   @Test
-  void genericException_returns500() {
-    ResponseEntity<String> response = handler.handle(new RuntimeException("Unexpected failure"));
-    assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-  }
-
-  @Test
-  void notFoundException_bodyContainsMessage() throws Exception {
-    ResponseEntity<String> response = handler.handle(new NotFoundException("Site NL0000001 not found"));
-    assertEquals("Site NL0000001 not found", extractErrorMessage(response));
-  }
-
-  @Test
-  void badRequestException_bodyContainsMessage() throws Exception {
-    ResponseEntity<String> response = handler.handle(new BadRequestException("Invalid parameter"));
-    assertEquals("Invalid parameter", extractErrorMessage(response));
-  }
-
-  @Test
-  void notImplementedException_bodyContainsDefaultMessage() throws Exception {
-    ResponseEntity<String> response = handler.handle(new NotImplementedException());
-    assertEquals("The requested functionality has not been implemented yet", extractErrorMessage(response));
-  }
-
-  @Test
-  void genericException_bodyContainsMessage() throws Exception {
-    ResponseEntity<String> response = handler.handle(new RuntimeException("Unexpected failure"));
-    assertEquals("Unexpected failure", extractErrorMessage(response));
+  void genericException() throws Exception {
+    // Given
+    RuntimeException ex = new RuntimeException("Unexpected failure");
+    // When
+    ResponseEntity<String> response = handler.handle(ex);
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    assertThat(extractErrorMessage(response)).isEqualTo("Unexpected failure");
   }
 
   @Test
   void exceptionWithNullMessage_fallsBackToClassName() throws Exception {
-    // NullPointerException() with no argument produces getMessage() == null,
-    // triggering the ifNull(..., ex.getClass().getSimpleName()) branch.
-    ResponseEntity<String> response = handler.handle(new NullPointerException());
-    assertEquals("NullPointerException", extractErrorMessage(response));
+    // Given
+    NullPointerException ex = new NullPointerException();
+    // When
+    ResponseEntity<String> response = handler.handle(ex);
+    // Then
+    assertThat(extractErrorMessage(response)).isEqualTo("NullPointerException");
   }
 
 }

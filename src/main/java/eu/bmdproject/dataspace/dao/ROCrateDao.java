@@ -12,7 +12,7 @@ public interface ROCrateDao {
 
   Optional<CrateSummary> getSummary(String id);
 
-  Optional<GraphPayload> getMetadata(String id, GraphFormat format);
+  Optional<GraphPayload> getMetadata(String id, RDFFormat format);
 
   boolean delete(String id);
 
@@ -24,7 +24,20 @@ public interface ROCrateDao {
 
   record GraphPayload(String graphUri, String body, String mediaType) {}
 
-  enum GraphFormat {
-    JSONLD, TURTLE, RDFXML
+  /**
+   * RDF formats supported by BMD Dataspace API.
+   */
+  enum RDFFormat {
+    JSONLD, TURTLE, RDFXML;
+
+    public static RDFFormat parse(String value) {
+      return switch (value) {
+        case "turtle", "ttl", "text/turtle" -> TURTLE;
+        case "jsonld", "json-ld", "application/ld+json" -> JSONLD;
+        case "rdfxml", "rdf/xml", "rdf-xml", "xml", "application/rdf+xml" -> RDFXML;
+        default -> throw new IllegalArgumentException("Unsupported format: \"%s\"".formatted(value));
+      };
+
+    }
   }
 }

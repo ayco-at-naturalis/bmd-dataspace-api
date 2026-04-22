@@ -124,20 +124,20 @@ class JenaROCrateDaoTest {
     long countFromSummary = summaryOpt.get().tripleCount();
 
     // getMetadata() for each format – parse-free sanity + media type check
-    assertThat(dao.getMetadata(id, ROCrateDao.GraphFormat.JSONLD))
+    assertThat(dao.getMetadata(id, ROCrateDao.RDFFormat.JSONLD))
         .hasValueSatisfying(p -> {
           assertThat(p.graphUri()).isEqualTo(graphUri);
           assertThat(p.mediaType()).isEqualTo(MediaType.valueOf("application/ld+json").toString());
           assertThat(p.body()).isNotBlank();
         });
 
-    assertThat(dao.getMetadata(id, ROCrateDao.GraphFormat.TURTLE))
+    assertThat(dao.getMetadata(id, ROCrateDao.RDFFormat.TURTLE))
         .hasValueSatisfying(p -> {
           assertThat(p.mediaType()).isEqualTo("text/turtle");
           assertThat(p.body()).isNotBlank();
         });
 
-    assertThat(dao.getMetadata(id, ROCrateDao.GraphFormat.RDFXML))
+    assertThat(dao.getMetadata(id, ROCrateDao.RDFFormat.RDFXML))
         .hasValueSatisfying(p -> {
           assertThat(p.mediaType()).isEqualTo("application/rdf+xml");
           assertThat(p.body()).isNotBlank();
@@ -150,7 +150,7 @@ class JenaROCrateDaoTest {
     assertThat(dao.delete(id)).isTrue();
     assertThat(dao.delete(id)).isFalse();
     assertThat(dao.getSummary(id)).isEmpty();
-    assertThat(dao.getMetadata(id, ROCrateDao.GraphFormat.JSONLD)).isEmpty();
+    assertThat(dao.getMetadata(id, ROCrateDao.RDFFormat.JSONLD)).isEmpty();
   }
 
   @Test

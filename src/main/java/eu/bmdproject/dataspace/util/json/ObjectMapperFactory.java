@@ -11,7 +11,8 @@ public final class ObjectMapperFactory {
 
   private static final ObjectMapper INSTANCE = build();
 
-  private ObjectMapperFactory() {}
+  private ObjectMapperFactory() {
+  }
 
   public static ObjectMapper getObjectMapper() {
     return INSTANCE;
@@ -23,7 +24,7 @@ public final class ObjectMapperFactory {
     mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     mapper.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
     // Exclude null/empty values (strings, collections, maps, etc.)
-     mapper.setDefaultPropertyInclusion(
+    mapper.setDefaultPropertyInclusion(
         JsonInclude.Value.construct(JsonInclude.Include.NON_EMPTY, JsonInclude.Include.NON_EMPTY)
     );
     mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);

@@ -1,8 +1,8 @@
 package eu.bmdproject.dataspace.controller;
 
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.dao.ROCrateDao.RDFFormat;
-import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
+import eu.bmdproject.dataspace.model.RDFFormat;
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;

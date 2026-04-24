@@ -1,11 +1,14 @@
 package eu.bmdproject.dataspace.controller;
 
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.dao.ROCrateDao.RDFFormat;
+import eu.bmdproject.dataspace.model.RDFFormat;
 import eu.bmdproject.dataspace.exception.BadRequestException;
-import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.net.URI;
@@ -16,16 +19,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ROCrateControllerTest {
 
+  @Mock
   private ROCrateDao dao;
+  @Mock
   private ROCrateUriValidator uriValidator;
+
   private ROCrateController controller;
 
   @BeforeEach
   void setUp() {
-    dao = mock(ROCrateDao.class);
-    uriValidator = mock(ROCrateUriValidator.class);
     controller = new ROCrateController(dao, uriValidator);
   }
 

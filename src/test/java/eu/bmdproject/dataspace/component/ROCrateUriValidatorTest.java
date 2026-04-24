@@ -1,22 +1,52 @@
-package eu.bmdproject.dataspace.validation;
+package eu.bmdproject.dataspace.component;
 
 import eu.bmdproject.dataspace.exception.BadRequestException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 
-class IPValidatorTest {
+class ROCrateUriValidatorTest {
 
-  private final IPValidator validator = new IPValidator();
+  private ROCrateUriValidator validator;
+
+  @BeforeEach
+  void setUp() {
+    validator = new ROCrateUriValidator();
+  }
+
+  @Test
+  void validate_httpScheme_throwsBadRequestException() {
+    //Given
+    URI uri = URI.create("http://example.com/crate.zip");
+
+    //When/Then
+    assertThatThrownBy(() -> validator.validate(uri))
+        .isInstanceOf(BadRequestException.class)
+        .hasMessageContaining("https");
+
+  }
+
+  @Test
+  void validate_fileScheme_throwsBadRequestException() {
+    //Given
+    URI uri = URI.create("file:///etc/passwd");
+
+    //When/Then
+    assertThatThrownBy(() -> validator.validate(uri))
+        .isInstanceOf(BadRequestException.class)
+        .hasMessageContaining("https");
+
+  }
 
   @Test
   void validate_loopbackAddress_throwsBadRequestException() {
     //Given
     URI uri = URI.create("https://127.0.0.1/crate.zip");
-
     //When/Then
     assertThatThrownBy(() -> validator.validate(uri))
         .isInstanceOf(BadRequestException.class)

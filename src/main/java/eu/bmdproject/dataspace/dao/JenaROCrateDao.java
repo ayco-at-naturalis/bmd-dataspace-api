@@ -1,6 +1,7 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.GraphProperties;
+import eu.bmdproject.dataspace.model.RDFFormat;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;

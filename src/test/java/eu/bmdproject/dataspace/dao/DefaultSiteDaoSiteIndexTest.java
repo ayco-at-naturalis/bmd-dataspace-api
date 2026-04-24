@@ -2,14 +2,14 @@ package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.DiscoDataProperties;
 import eu.bmdproject.dataspace.util.eea.DiscodataClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +21,22 @@ import static org.mockito.Mockito.*;
 
 class DefaultSiteDaoSiteIndexTest {
 
+  @TempDir
+  Path tmp;
+
+  private Path gpkgPath;
+
+  @BeforeEach
+  public void setup() throws Exception {
+    gpkgPath = tmp.resolve("test.gpkg");
+    Files.createFile(gpkgPath);
+  }
+
+
   private DefaultSiteDao dao() {
-    return new DefaultSiteDao(mock(DiscodataClient.class), mock(DiscoDataProperties.class));
+    DiscoDataProperties config = mock(DiscoDataProperties.class);
+    when(config.geopackagePath()).thenReturn(gpkgPath);
+    return new DefaultSiteDao(mock(DiscodataClient.class), config);
   }
 
   @Test

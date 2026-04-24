@@ -7,9 +7,13 @@ import eu.bmdproject.dataspace.model.Site;
 import eu.bmdproject.dataspace.model.SiteMetadataSource;
 import eu.bmdproject.dataspace.util.eea.DiscodataClient;
 import eu.bmdproject.dataspace.util.eea.SiteMetaDataUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -22,10 +26,22 @@ import static org.mockito.Mockito.*;
 
 class DefaultSiteDaoMetadataDefaultTest {
 
+  @TempDir
+  Path tmp;
+
+  private Path gpkgPath;
+
+  @BeforeEach
+  public void setup() throws Exception {
+    gpkgPath = tmp.resolve("test.gpkg");
+    Files.createFile(gpkgPath);
+  }
+
   @Test
   void getMetadataForSite_default_happyPath() throws Exception {
     DiscodataClient discodataClient = mock(DiscodataClient.class);
     DiscoDataProperties props = mock(DiscoDataProperties.class);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
     DefaultSiteDao dao = new DefaultSiteDao(discodataClient, props);
 
     Connection c = mock(Connection.class);
@@ -56,6 +72,7 @@ class DefaultSiteDaoMetadataDefaultTest {
   void getMetadataForSite_default_notFound() throws Exception {
     DiscodataClient discodataClient = mock(DiscodataClient.class);
     DiscoDataProperties props = mock(DiscoDataProperties.class);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
     DefaultSiteDao dao = new DefaultSiteDao(discodataClient, props);
 
     Connection c = mock(Connection.class);

@@ -1,7 +1,8 @@
 package eu.bmdproject.dataspace.controller;
 
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.dao.ROCrateDao.GraphFormat;
+import eu.bmdproject.dataspace.model.RDFFormat;
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -12,6 +13,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Endpoints for dealing with RO-Creates.
+ */
 @RestController
 @RequestMapping("/rocrates")
 public class ROCrateController {
@@ -19,25 +23,29 @@ public class ROCrateController {
   private static final Logger LOG = LoggerFactory.getLogger(ROCrateController.class);
 
   private final ROCrateDao dao;
+  private final ROCrateUriValidator uriValidator;
 
-  public ROCrateController(ROCrateDao dao) {
+  public ROCrateController(ROCrateDao dao, ROCrateUriValidator uriValidator) {
     this.dao = dao;
+    this.uriValidator = uriValidator;
   }
-
+  /**
+   * Ingest an RO-Create by fetching it from a user-specified location. This is a classic log4shell-type
+   * vulnerability. We need some checks on what we pulled in.
+   *
+   * @param fetchFrom
+   *     a URL pointing at an RO-Crate.
+   *
+   * @return information about the ingestion process
+   */
   @PostMapping("/ingest")
   public ResponseEntity<ROCrateDao.IngestResult> ingest(@RequestParam("fetchFrom") URI fetchFrom) {
     LOG.info("Ingesting RO-Crate from URL {}", fetchFrom);
+    uriValidator.validate(fetchFrom);
     ROCrateDao.IngestResult result = dao.ingestFromUrl(fetchFrom);
     URI location = URI.create("/rocrates/" + result.id());
     return ResponseEntity.created(location).body(result);
   }
-
-  // Temporary MVP/demo alias (browser-friendly). Remove afterwards.
-  @GetMapping("/ingest")
-  public ResponseEntity<ROCrateDao.IngestResult> ingestGet(@RequestParam("fetchFrom") URI fetchFrom) {
-    return ingest(fetchFrom);
-  }
-
   /**
    * List ingested RO-Crates (IDs + graph URIs).
    */
@@ -47,20 +55,20 @@ public class ROCrateController {
   }
 
   /**
-   * Graph dump endpoint (default Turtle).
-   * Usage:
-   *   /rocrates/{id}                 -> Turtle
-   *   /rocrates/{id}?format=rdfxml   -> RDF/XML
-   *   /rocrates/{id}?format=jsonld   -> JSON-LD
+   * Graph dump endpoint (default Turtle). Usage:
+   * <blockquote><pre>{@code
+   * /rocrates/{id}                 -> Turtle
+   * /rocrates/{id}?format=rdfxml   -> RDF/XML
+   * /rocrates/{id}?format=jsonld   -> JSON-LD
+   * }</pre></blockquote>
    */
   @GetMapping("/{id}")
   public ResponseEntity<String> getGraph(
       @PathVariable("id") String id,
-      @RequestParam(value = "format", defaultValue = "turtle") String format
+      @RequestParam(value = "format", defaultValue = "json-ld") String format
   ) {
-    GraphFormat graphFormat = parseFormat(format);
-
-    return dao.getMetadata(id, graphFormat)
+    RDFFormat RDFFormat = parseFormat(format);
+    return dao.getMetadata(id, RDFFormat)
         .map(payload -> ResponseEntity.ok()
             .contentType(MediaType.valueOf(payload.mediaType()))
             .body(payload.body()))
@@ -78,17 +86,6 @@ public class ROCrateController {
   }
 
   /**
-   * Backwards-compatible alias. Consider removing once clients switch to GET /rocrates/{id}.
-   */
-  @GetMapping("/{id}/metadata")
-  public ResponseEntity<String> getMetadataAlias(
-      @PathVariable("id") String id,
-      @RequestParam(value = "format", defaultValue = "jsonld") String format
-  ) {
-    return getGraph(id, format);
-  }
-
-  /**
    * Delete an ingested RO-Crate graph.
    */
   @DeleteMapping("/{id}")
@@ -98,13 +95,8 @@ public class ROCrateController {
     return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
-  private static GraphFormat parseFormat(String format) {
-    String f = format == null ? "turtle" : format.trim().toLowerCase(Locale.ROOT);
-    return switch (f) {
-      case "turtle", "ttl", "text/turtle" -> GraphFormat.TURTLE;
-      case "jsonld", "json-ld", "application/ld+json" -> GraphFormat.JSONLD;
-      case "rdfxml", "rdf/xml", "rdf-xml", "xml", "application/rdf+xml" -> GraphFormat.RDFXML;
-      default -> throw new IllegalArgumentException("Unsupported format: " + format);
-    };
+  private static RDFFormat parseFormat(String format) {
+    String f = format == null ? "jsonld" : format.trim().toLowerCase(Locale.ROOT);
+    return RDFFormat.parse(f);
   }
 }

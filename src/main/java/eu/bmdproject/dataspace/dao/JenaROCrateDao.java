@@ -1,6 +1,7 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.GraphProperties;
+import eu.bmdproject.dataspace.model.RDFFormat;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
@@ -109,7 +110,7 @@ public class JenaROCrateDao implements ROCrateDao {
   }
 
   @Override
-  public Optional<GraphPayload> getMetadata(String id, GraphFormat format) {
+  public Optional<GraphPayload> getMetadata(String id, RDFFormat format) {
     LOG.debug("Retrieving metadata for graph {} (format={})", id, format);
     String graphUri = graphUriFor(id);
     dataset.begin(ReadWrite.READ);
@@ -228,7 +229,7 @@ public class JenaROCrateDao implements ROCrateDao {
     }
   }
 
-  private static Serialized serialize(Model model, GraphFormat format) {
+  private static Serialized serialize(Model model, RDFFormat format) {
     try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
       Lang lang;
       String mediaType;

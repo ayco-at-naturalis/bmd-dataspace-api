@@ -1,4 +1,4 @@
-package eu.bmdproject.dataspace.validation;
+package eu.bmdproject.dataspace.component;
 
 import eu.bmdproject.dataspace.exception.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;

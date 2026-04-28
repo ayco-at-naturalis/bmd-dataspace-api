@@ -2,7 +2,7 @@ package eu.bmdproject.dataspace.controller;
 
 import eu.bmdproject.dataspace.dao.ROCrateDao;
 import eu.bmdproject.dataspace.exception.BadRequestException;
-import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;

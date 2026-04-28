@@ -1,8 +1,8 @@
 package eu.bmdproject.dataspace.controller;
 
-import eu.bmdproject.dataspace.model.RDFFormat;
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
+import eu.bmdproject.dataspace.model.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -28,7 +28,6 @@ public class ROCrateController {
     this.dao = dao;
     this.uriValidator = uriValidator;
   }
-
   /**
    * Ingest an RO-Create by fetching it from a user-specified location. This is a classic log4shell-type
    * vulnerability. We need some checks on what we pulled in.
@@ -46,7 +45,6 @@ public class ROCrateController {
     URI location = URI.create("/rocrates/" + result.id());
     return ResponseEntity.created(location).body(result);
   }
-
   /**
    * List ingested RO-Crates (IDs + graph URIs).
    */
@@ -74,6 +72,7 @@ public class ROCrateController {
             .body(payload.body()))
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
+
 
   /**
    * Summary endpoint: triple count, etc.

@@ -6,31 +6,17 @@ import org.junit.jupiter.api.Test;
 
 import java.net.URI;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatNoException;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 
 class ROCrateUriValidatorTest {
 
-  private IPValidator ipValidator;
   private ROCrateUriValidator validator;
 
   @BeforeEach
   void setUp() {
-    ipValidator = mock(IPValidator.class);
-    validator = new ROCrateUriValidator(ipValidator);
-  }
-
-  @Test
-  void validate_httpsUri_delegatesToIpValidator() {
-    //Given
-    URI uri = URI.create("https://example.com/crate.zip");
-
-    //When
-    assertThatNoException().isThrownBy(() -> validator.validate(uri));
-
-    //Then
-    verify(ipValidator).validate(uri);
+    validator = new ROCrateUriValidator();
   }
 
   @Test
@@ -43,7 +29,6 @@ class ROCrateUriValidatorTest {
         .isInstanceOf(BadRequestException.class)
         .hasMessageContaining("https");
 
-    verifyNoInteractions(ipValidator);
   }
 
   @Test
@@ -56,18 +41,45 @@ class ROCrateUriValidatorTest {
         .isInstanceOf(BadRequestException.class)
         .hasMessageContaining("https");
 
-    verifyNoInteractions(ipValidator);
   }
 
   @Test
-  void validate_ipValidatorRejects_exceptionPropagates() {
+  void validate_loopbackAddress_throwsBadRequestException() {
     //Given
-    URI uri = URI.create("https://internal.example.com/crate.zip");
-    doThrow(new BadRequestException("private address")).when(ipValidator).validate(uri);
+    URI uri = URI.create("https://127.0.0.1/crate.zip");
+    //When/Then
+    assertThatThrownBy(() -> validator.validate(uri))
+        .isInstanceOf(BadRequestException.class)
+        .hasMessageContaining("127.0.0.1");
+  }
+
+  @Test
+  void validate_localhost_throwsBadRequestException() {
+    //Given — localhost always resolves to loopback
+    URI uri = URI.create("https://localhost/crate.zip");
+
+    //When/Then
+    assertThatThrownBy(() -> validator.validate(uri))
+        .isInstanceOf(BadRequestException.class);
+  }
+
+  @Test
+  void validate_privateSiteLocalAddress_throwsBadRequestException() {
+    //Given
+    URI uri = URI.create("https://192.168.1.1/crate.zip");
 
     //When/Then
     assertThatThrownBy(() -> validator.validate(uri))
         .isInstanceOf(BadRequestException.class)
-        .hasMessageContaining("private address");
+        .hasMessageContaining("192.168.1.1");
+  }
+
+  @Test
+  void validate_publicHost_doesNotThrow() {
+    //Given — if bmd-project.eu goes away, no one will care about this test
+    URI uri = URI.create("https://bmd-project.eu/crate.zip");
+
+    //When/Then
+    assertThatNoException().isThrownBy(() -> validator.validate(uri));
   }
 }

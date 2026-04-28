@@ -1,5 +1,7 @@
 package eu.bmdproject.dataspace.dao;
 
+import eu.bmdproject.dataspace.model.RDFFormat;
+
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -24,20 +26,4 @@ public interface ROCrateDao {
 
   record GraphPayload(String graphUri, String body, String mediaType) {}
 
-  /**
-   * RDF formats supported by BMD Dataspace API.
-   */
-  enum RDFFormat {
-    JSONLD, TURTLE, RDFXML;
-
-    public static RDFFormat parse(String value) {
-      return switch (value) {
-        case "turtle", "ttl", "text/turtle" -> TURTLE;
-        case "jsonld", "json-ld", "application/ld+json" -> JSONLD;
-        case "rdfxml", "rdf/xml", "rdf-xml", "xml", "application/rdf+xml" -> RDFXML;
-        default -> throw new IllegalArgumentException("Unsupported format: \"%s\"".formatted(value));
-      };
-
-    }
-  }
 }

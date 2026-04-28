@@ -1,7 +1,7 @@
 package eu.bmdproject.dataspace.controller;
 
+import eu.bmdproject.dataspace.model.RDFFormat;
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.dao.ROCrateDao.RDFFormat;
 import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Endpoints for dealing with RO-Creates.
@@ -29,6 +28,7 @@ public class ROCrateController {
     this.dao = dao;
     this.uriValidator = uriValidator;
   }
+
   /**
    * Ingest an RO-Create by fetching it from a user-specified location. This is a classic log4shell-type
    * vulnerability. We need some checks on what we pulled in.
@@ -46,6 +46,7 @@ public class ROCrateController {
     URI location = URI.create("/rocrates/" + result.id());
     return ResponseEntity.created(location).body(result);
   }
+
   /**
    * List ingested RO-Crates (IDs + graph URIs).
    */
@@ -65,10 +66,9 @@ public class ROCrateController {
   @GetMapping("/{id}")
   public ResponseEntity<String> getGraph(
       @PathVariable("id") String id,
-      @RequestParam(value = "format", defaultValue = "json-ld") String format
+      @RequestParam(value = "format") RDFFormat format
   ) {
-    RDFFormat RDFFormat = parseFormat(format);
-    return dao.getMetadata(id, RDFFormat)
+    return dao.getMetadata(id, format)
         .map(payload -> ResponseEntity.ok()
             .contentType(MediaType.valueOf(payload.mediaType()))
             .body(payload.body()))
@@ -95,8 +95,4 @@ public class ROCrateController {
     return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
-  private static RDFFormat parseFormat(String format) {
-    String f = format == null ? "jsonld" : format.trim().toLowerCase(Locale.ROOT);
-    return RDFFormat.parse(f);
-  }
 }

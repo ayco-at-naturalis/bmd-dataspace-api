@@ -91,7 +91,7 @@ class DefaultSiteDaoSiteIndexTest {
     // Then — blank-name row is skipped; only the valid row survives
     List<List<String>> index = result.get("Natura2000 Site Index");
     assertThat(index).hasSize(1);
-    assertThat(index.get(0)).containsExactly("Veluwe", "NL456");
+    assertThat(index.getFirst()).containsExactly("Veluwe", "NL456");
   }
 
   @Test

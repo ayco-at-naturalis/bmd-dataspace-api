@@ -1,6 +1,7 @@
 package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.GraphProperties;
+import eu.bmdproject.dataspace.model.RDFFormat;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.ReadWrite;
 import org.apache.jena.rdf.model.Model;
@@ -237,11 +238,11 @@ public class JenaROCrateDao implements ROCrateDao {
           lang = Lang.TURTLE;
           mediaType = "text/turtle";
         }
-        case JSONLD -> {
+        case JSON_LD -> {
           lang = Lang.JSONLD;
           mediaType = "application/ld+json";
         }
-        case RDFXML -> {
+        case RDF_XML -> {
           lang = Lang.RDFXML;
           mediaType = "application/rdf+xml";
         }

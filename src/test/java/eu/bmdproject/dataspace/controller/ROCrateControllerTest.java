@@ -1,7 +1,6 @@
 package eu.bmdproject.dataspace.controller;
 
 import eu.bmdproject.dataspace.dao.ROCrateDao;
-import eu.bmdproject.dataspace.dao.ROCrateDao.RDFFormat;
 import eu.bmdproject.dataspace.exception.BadRequestException;
 import eu.bmdproject.dataspace.validation.ROCrateUriValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +11,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import static eu.bmdproject.dataspace.model.RDFFormat.TURTLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -77,10 +77,10 @@ class ROCrateControllerTest {
   void getGraph_found_returnsOkWithCorrectContentType() {
     //Given
     ROCrateDao.GraphPayload payload = new ROCrateDao.GraphPayload("urn:graph:abc123", "<rdf/>", "text/turtle");
-    when(dao.getMetadata("abc123", RDFFormat.TURTLE)).thenReturn(Optional.of(payload));
+    when(dao.getMetadata("abc123", TURTLE)).thenReturn(Optional.of(payload));
 
     //When
-    ResponseEntity<String> response = controller.getGraph("abc123", "turtle");
+    ResponseEntity<String> response = controller.getGraph("abc123", TURTLE);
 
     //Then
     assertThat(response.getStatusCode().value()).isEqualTo(200);
@@ -91,21 +91,13 @@ class ROCrateControllerTest {
   @Test
   void getGraph_notFound_returns404() {
     //Given
-    when(dao.getMetadata("missing", RDFFormat.TURTLE)).thenReturn(Optional.empty());
+    when(dao.getMetadata("missing", TURTLE)).thenReturn(Optional.empty());
 
     //When
-    ResponseEntity<String> response = controller.getGraph("missing", "turtle");
+    ResponseEntity<String> response = controller.getGraph("missing", TURTLE);
 
     //Then
     assertThat(response.getStatusCode().value()).isEqualTo(404);
-  }
-
-  @Test
-  void getGraph_unknownFormat_throwsIllegalArgumentException() {
-    //When/Then
-    assertThatThrownBy(() -> controller.getGraph("abc123", "csv"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("csv");
   }
 
   @Test

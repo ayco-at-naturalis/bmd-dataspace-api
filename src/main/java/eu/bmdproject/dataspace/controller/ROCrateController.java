@@ -1,8 +1,8 @@
 package eu.bmdproject.dataspace.controller;
 
+import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import eu.bmdproject.dataspace.dao.ROCrateDao;
 import eu.bmdproject.dataspace.model.RDFFormat;
-import eu.bmdproject.dataspace.component.ROCrateUriValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Endpoints for dealing with RO-Creates.
@@ -65,15 +64,15 @@ public class ROCrateController {
   @GetMapping("/{id}")
   public ResponseEntity<String> getGraph(
       @PathVariable("id") String id,
-      @RequestParam(value = "format", defaultValue = "json-ld") String format
+      @RequestParam(value = "format") RDFFormat format
   ) {
-    RDFFormat RDFFormat = parseFormat(format);
-    return dao.getMetadata(id, RDFFormat)
+    return dao.getMetadata(id, format)
         .map(payload -> ResponseEntity.ok()
             .contentType(MediaType.valueOf(payload.mediaType()))
             .body(payload.body()))
         .orElseGet(() -> ResponseEntity.notFound().build());
   }
+
 
   /**
    * Summary endpoint: triple count, etc.
@@ -95,8 +94,4 @@ public class ROCrateController {
     return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
   }
 
-  private static RDFFormat parseFormat(String format) {
-    String f = format == null ? "jsonld" : format.trim().toLowerCase(Locale.ROOT);
-    return RDFFormat.parse(f);
-  }
 }

@@ -56,7 +56,6 @@ class DefaultSiteDaoMetadataDefaultTest {
     gpkgPath = tmp.resolve("test.gpkg");
     Files.createFile(gpkgPath);
     when(props.geopackagePath()).thenReturn(gpkgPath);
-    when(props.geopackagePath()).thenReturn(gpkgPath);
     when(c.prepareStatement(anyString())).thenReturn(ps);
     when(ps.executeQuery()).thenReturn(rs);
   }

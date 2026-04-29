@@ -2,14 +2,15 @@ package eu.bmdproject.dataspace.dao;
 
 import eu.bmdproject.dataspace.config.DiscoDataProperties;
 import eu.bmdproject.dataspace.util.eea.DiscodataClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 
@@ -21,8 +22,28 @@ import static org.mockito.Mockito.*;
 
 class DefaultSiteDaoSiteIndexTest {
 
+  @Mock
+  DiscodataClient discodataClient;
+
+  @Mock
+  DiscoDataProperties props;
+
+  @TempDir
+  Path tmp;
+
+  private Path gpkgPath;
+
+  @BeforeEach
+  public void setup() throws Exception {
+    gpkgPath = tmp.resolve("test.gpkg");
+    Files.createFile(gpkgPath);
+    props = mock(DiscoDataProperties.class);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
+  }
+
+
   private DefaultSiteDao dao() {
-    return new DefaultSiteDao(mock(DiscodataClient.class), mock(DiscoDataProperties.class));
+    return new DefaultSiteDao(discodataClient, props);
   }
 
   @Test
@@ -77,7 +98,7 @@ class DefaultSiteDaoSiteIndexTest {
     // Then — blank-name row is skipped; only the valid row survives
     List<List<String>> index = result.get("Natura2000 Site Index");
     assertThat(index).hasSize(1);
-    assertThat(index.get(0)).containsExactly("Veluwe", "NL456");
+    assertThat(index.getFirst()).containsExactly("Veluwe", "NL456");
   }
 
   @Test

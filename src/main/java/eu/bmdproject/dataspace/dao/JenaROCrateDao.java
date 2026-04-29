@@ -238,11 +238,11 @@ public class JenaROCrateDao implements ROCrateDao {
           lang = Lang.TURTLE;
           mediaType = "text/turtle";
         }
-        case JSONLD -> {
+        case JSON_LD -> {
           lang = Lang.JSONLD;
           mediaType = "application/ld+json";
         }
-        case RDFXML -> {
+        case RDF_XML -> {
           lang = Lang.RDFXML;
           mediaType = "application/rdf+xml";
         }

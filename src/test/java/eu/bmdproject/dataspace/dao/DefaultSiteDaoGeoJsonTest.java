@@ -4,13 +4,9 @@ import eu.bmdproject.dataspace.config.DiscoDataProperties;
 import eu.bmdproject.dataspace.util.eea.DiscodataClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.MultiPolygon;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.ByteOrderValues;
 import org.locationtech.jts.io.WKBWriter;
-import org.locationtech.jts.geom.Geometry;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -22,6 +18,7 @@ import java.sql.PreparedStatement;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DefaultSiteDaoGeoJsonTest {
 
@@ -32,9 +29,10 @@ class DefaultSiteDaoGeoJsonTest {
   void getGeoJsonForSite_returnsFeatureCollectionJson() throws Exception {
     // Given
     Path gpkgPath = tmp.resolve("test.gpkg");
+    DiscoDataProperties config = mock(DiscoDataProperties.class);
+    when(config.geopackagePath()).thenReturn(gpkgPath);
     createMinimalGeoPackage(gpkgPath, "FI123");
-    DefaultSiteDao.setGpkgPathForTests(gpkgPath);
-    DefaultSiteDao dao = new DefaultSiteDao(mock(DiscodataClient.class), mock(DiscoDataProperties.class));
+    DefaultSiteDao dao = new DefaultSiteDao(mock(DiscodataClient.class), config);
 
     // When
     String json = dao.getGeoJsonForSite("FI123");
@@ -46,16 +44,15 @@ class DefaultSiteDaoGeoJsonTest {
   }
 
   /**
-   * Let's test with a minimal but real spec-compliant GeoPackage rather than mock our way out of this. It
-   * contains one MultiPolygon feature in EPSG:3035 in the NaturaSite_polygon layer. Uses the SQLite/JDBC
-   * directly, bypassing the org.geotools write API, because it's painfully buggy.
+   * Builds a minimal but spec-compliant GeoPackage (SQLite file) containing one MultiPolygon
+   * feature in EPSG:3035 in the NaturaSite_polygon layer. Uses only the sqlite-jdbc driver —
+   * no GeoTools write API involved.
    */
   private static void createMinimalGeoPackage(Path gpkgPath, String siteCode) throws Exception {
     String url = "jdbc:sqlite:" + gpkgPath.toAbsolutePath();
     try (Connection c = DriverManager.getConnection(url)) {
       c.setAutoCommit(false);
 
-      // --- mandatory GeoPackage tables ---
       try (var st = c.createStatement()) {
 
         st.execute("""
@@ -108,7 +105,6 @@ class DefaultSiteDaoGeoJsonTest {
             VALUES
               ('NaturaSite_polygon', 'the_geom', 'MULTIPOLYGON', 3035, 0, 0)""");
 
-        // --- the feature table itself ---
         st.execute("""
             CREATE TABLE NaturaSite_polygon (
               fid INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,7 +113,6 @@ class DefaultSiteDaoGeoJsonTest {
             )""");
       }
 
-      // --- insert one feature ---
       byte[] gpkgBlob = toGeoPackageBlob(makeMultiPolygon(), 3035);
       try (PreparedStatement ps = c.prepareStatement(
           "INSERT INTO NaturaSite_polygon (the_geom, SITECODE) VALUES (?, ?)")) {
@@ -130,9 +125,6 @@ class DefaultSiteDaoGeoJsonTest {
     }
   }
 
-  /**
-   * A simple valid MultiPolygon in any projected CRS (coordinates are CRS-agnostic here).
-   */
   private static MultiPolygon makeMultiPolygon() {
     GeometryFactory gf = new GeometryFactory();
     Coordinate[] ring = {
@@ -140,13 +132,13 @@ class DefaultSiteDaoGeoJsonTest {
         new Coordinate(3000000, 1100000),
         new Coordinate(3100000, 1100000),
         new Coordinate(3100000, 1000000),
-        new Coordinate(3000000, 1000000)   // closed
+        new Coordinate(3000000, 1000000)
     };
     Polygon polygon = gf.createPolygon(ring);
     return gf.createMultiPolygon(new Polygon[]{polygon});
   }
 
-  /*
+  /**
    * Wraps a JTS geometry in a GeoPackage Standard Binary Header (GPB).
    * Spec: OGC 12-128r18, Annex B.
    *
@@ -160,14 +152,10 @@ class DefaultSiteDaoGeoJsonTest {
   private static byte[] toGeoPackageBlob(Geometry geom, int srsId) throws Exception {
     byte[] wkb = new WKBWriter(2, ByteOrderValues.LITTLE_ENDIAN).write(geom);
     ByteArrayOutputStream baos = new ByteArrayOutputStream(8 + wkb.length);
-    // magic
     baos.write(0x47); // 'G'
     baos.write(0x50); // 'P'
-    // version
-    baos.write(0x00);
-    // flags: little-endian WKB (bit 0 = 1), no envelope (bits 1-3 = 0), not empty (bit 4 = 0)
-    baos.write(0x01);
-    // srs_id as little-endian int32
+    baos.write(0x00); // version
+    baos.write(0x01); // flags: little-endian, no envelope
     ByteBuffer srsBytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(srsId);
     baos.write(srsBytes.array());
     baos.write(wkb);

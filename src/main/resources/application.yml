@@ -28,3 +28,4 @@ app:
     endpoint: "https://discodata.eea.europa.eu/sql"
     eunis-query-template: "SELECT * FROM [EUNIS].[latest].[Site_Information] WHERE code_site = '%s'"
     bise-query-template:  "SELECT * FROM [BISE].[latest].[Site_Information] WHERE site_code = '%s'"
+    geopackage-path: "${GEOPACKAGE_PATH:/data/bmd/resources/eea/Natura2000_end2024.gpkg}"

@@ -1,6 +1,5 @@
 package eu.bmdproject.dataspace.dao;
 
-import com.google.common.annotations.VisibleForTesting;
 import eu.bmdproject.dataspace.config.DiscoDataProperties;
 import eu.bmdproject.dataspace.exception.NotFoundException;
 import eu.bmdproject.dataspace.model.Site;
@@ -47,17 +46,12 @@ public class DefaultSiteDao implements SiteDao {
   private static final String LAYER_NAME = "NaturaSite_polygon";
   private static final String SITECODE_COL = "SITECODE";
 
-  private static Path GPKG_PATH = Path.of("/data/bmd/resources/eea/Natura2000_end2024.gpkg");
-
-  @VisibleForTesting
-  static void setGpkgPathForTests(Path gpkgPath) {
-    GPKG_PATH = gpkgPath;
-  }
-
   private final DiscodataClient discodataClient;
   private final DiscoDataProperties discodataConfig;
 
-  public DefaultSiteDao(DiscodataClient discodataClient, DiscoDataProperties discodataConfig) {
+  public DefaultSiteDao(
+      DiscodataClient discodataClient,
+      DiscoDataProperties discodataConfig) {
     this.discodataClient = discodataClient;
     this.discodataConfig = discodataConfig;
   }
@@ -65,8 +59,9 @@ public class DefaultSiteDao implements SiteDao {
   @Override
   public Map<String, List<List<String>>> getSiteIndex() {
     LOG.info("Generating Natura2000 site index");
-    Check.that(GPKG_PATH.toFile()).is(file(), "Missing ${arg}");
-    String url = "jdbc:sqlite:" + GPKG_PATH.toAbsolutePath();
+    Path gpkgPath = discodataConfig.geopackagePath();
+    Check.that(gpkgPath.toFile()).is(file(), "Missing ${arg}");
+    String url = "jdbc:sqlite:" + gpkgPath.toAbsolutePath();
     String sql = "SELECT SITECODE, SITENAME FROM NATURA2000SITES ORDER BY SITENAME ASC";
     List<List<String>> index = new ArrayList<>(3000);
     try (Connection c = DriverManager.getConnection(url);
@@ -93,7 +88,6 @@ public class DefaultSiteDao implements SiteDao {
     return Map.of("Natura2000 Site Index", index);
   }
 
-
   @Override
   public Site getMetadataForSite(String siteCode, SiteMetadataSource source) {
     LOG.info("Querying {} database using site code \"{}\"", source, siteCode);
@@ -115,7 +109,7 @@ public class DefaultSiteDao implements SiteDao {
       case DEFAULT -> {
         String sql = getDefaultSql();
         LOG.debug("SQL: {}", sql);
-        String url = "jdbc:sqlite:" + GPKG_PATH.toAbsolutePath();
+        String url = "jdbc:sqlite:" + discodataConfig.geopackagePath().toAbsolutePath();
         try (Connection c = DriverManager.getConnection(url);
              PreparedStatement ps = c.prepareStatement(sql)) {
           ps.setString(1, siteCode);
@@ -136,7 +130,8 @@ public class DefaultSiteDao implements SiteDao {
   public String getGeoJsonForSite(String siteCode) {
     LOG.info("Retrieving GeoJSON for site code \"{}\"", siteCode);
     Check.notNull(siteCode, "site code");
-    Check.that(GPKG_PATH.toFile()).is(file(), "Missing ${arg}");
+    Path gpkgPath = discodataConfig.geopackagePath();
+    Check.that(gpkgPath.toFile()).is(file(), "Missing ${arg}");
     DataStore store = null;
     try {
       store = DataStoreFinder.getDataStore(getConnectionDetails());
@@ -145,7 +140,6 @@ public class DefaultSiteDao implements SiteDao {
       FilterFactory ff = org.geotools.factory.CommonFactoryFinder.getFilterFactory();
       Filter filter = ff.equals(ff.property(SITECODE_COL), ff.literal(siteCode));
       SimpleFeatureCollection fc = source.getFeatures(filter);
-      // Reproject to EPSG:4326, always return FeatureCollection (even if empty)
       CoordinateReferenceSystem srcCrs = CRS.decode("EPSG:3035", true);
       CoordinateReferenceSystem dstCrs = CRS.decode("EPSG:4326", true);
       var tx = CRS.findMathTransform(srcCrs, dstCrs, true);
@@ -157,13 +151,11 @@ public class DefaultSiteDao implements SiteDao {
           Object geomObj = f.getDefaultGeometry();
           if (geomObj instanceof Geometry g) {
             Geometry g2 = JTS.transform(g, tx);
-            // Shallow copy feature, replace geometry
             SimpleFeatureBuilder b = new SimpleFeatureBuilder(schema);
             b.init(f);
             b.set(schema.getGeometryDescriptor().getName(), g2);
             out.add(b.buildFeature(f.getID()));
           } else {
-            // If unexpected geometry type, keep feature as-is (MVP tolerance)
             out.add(f);
           }
         }
@@ -181,8 +173,11 @@ public class DefaultSiteDao implements SiteDao {
     }
   }
 
-  private static Map<String, Object> getConnectionDetails() {
-    return Map.of("dbtype", "geopkg", "database", GPKG_PATH.toAbsolutePath().toString());
+  private Map<String, Object> getConnectionDetails() {
+    return Map.of("dbtype",
+        "geopkg",
+        "database",
+        discodataConfig.geopackagePath().toAbsolutePath().toString());
   }
 
   private static String getDefaultSql() {
@@ -215,6 +210,4 @@ public class DefaultSiteDao implements SiteDao {
         WHERE SITECODE = ?
         LIMIT 1""";
   }
-
-
 }

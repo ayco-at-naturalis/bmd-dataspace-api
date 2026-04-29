@@ -125,7 +125,7 @@ class JenaROCrateDaoTest {
     long countFromSummary = summaryOpt.get().tripleCount();
 
     // getMetadata() for each format – parse-free sanity + media type check
-    assertThat(dao.getMetadata(id, RDFFormat.JSONLD))
+    assertThat(dao.getMetadata(id, RDFFormat.JSON_LD))
         .hasValueSatisfying(p -> {
           assertThat(p.graphUri()).isEqualTo(graphUri);
           assertThat(p.mediaType()).isEqualTo(MediaType.valueOf("application/ld+json").toString());
@@ -138,7 +138,7 @@ class JenaROCrateDaoTest {
           assertThat(p.body()).isNotBlank();
         });
 
-    assertThat(dao.getMetadata(id, RDFFormat.RDFXML))
+    assertThat(dao.getMetadata(id, RDFFormat.RDF_XML))
         .hasValueSatisfying(p -> {
           assertThat(p.mediaType()).isEqualTo("application/rdf+xml");
           assertThat(p.body()).isNotBlank();
@@ -151,7 +151,7 @@ class JenaROCrateDaoTest {
     assertThat(dao.delete(id)).isTrue();
     assertThat(dao.delete(id)).isFalse();
     assertThat(dao.getSummary(id)).isEmpty();
-    assertThat(dao.getMetadata(id, RDFFormat.JSONLD)).isEmpty();
+    assertThat(dao.getMetadata(id, RDFFormat.JSON_LD)).isEmpty();
   }
 
   @Test

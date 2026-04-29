@@ -5,6 +5,7 @@ import eu.bmdproject.dataspace.util.eea.DiscodataClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
 
 import java.nio.file.Files;
@@ -21,6 +22,12 @@ import static org.mockito.Mockito.*;
 
 class DefaultSiteDaoSiteIndexTest {
 
+  @Mock
+  DiscodataClient discodataClient;
+
+  @Mock
+  DiscoDataProperties props;
+
   @TempDir
   Path tmp;
 
@@ -30,13 +37,13 @@ class DefaultSiteDaoSiteIndexTest {
   public void setup() throws Exception {
     gpkgPath = tmp.resolve("test.gpkg");
     Files.createFile(gpkgPath);
+    props = mock(DiscoDataProperties.class);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
   }
 
 
   private DefaultSiteDao dao() {
-    DiscoDataProperties config = mock(DiscoDataProperties.class);
-    when(config.geopackagePath()).thenReturn(gpkgPath);
-    return new DefaultSiteDao(mock(DiscodataClient.class), config);
+    return new DefaultSiteDao(discodataClient, props);
   }
 
   @Test

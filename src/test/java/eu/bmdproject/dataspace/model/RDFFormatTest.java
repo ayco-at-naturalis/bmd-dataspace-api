@@ -1,6 +1,11 @@
 package eu.bmdproject.dataspace.model;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,21 +22,35 @@ class RDFFormatTest {
     assertThat(RDFFormat.forValue("")).isEqualTo(RDFFormat.JSON_LD);
   }
 
-  @Test
-  void forValue_mediaType_resolves() {
-    assertThat(RDFFormat.forValue("application/ld+json")).isEqualTo(RDFFormat.JSON_LD);
-    assertThat(RDFFormat.forValue("text/turtle")).isEqualTo(RDFFormat.TURTLE);
-    assertThat(RDFFormat.forValue("application/rdf+xml")).isEqualTo(RDFFormat.RDF_XML);
+  @ParameterizedTest
+  @MethodSource("mediaTypeToFormat")
+  void forValue_mediaType_resolves(String mediaType, RDFFormat format) {
+    assertThat(RDFFormat.forValue(mediaType)).isEqualTo(format);
   }
 
-  @Test
-  void forValue_aliases_resolve() {
-    assertThat(RDFFormat.forValue("jsonld")).isEqualTo(RDFFormat.JSON_LD);
-    assertThat(RDFFormat.forValue("json-ld")).isEqualTo(RDFFormat.JSON_LD);
-    assertThat(RDFFormat.forValue("turtle")).isEqualTo(RDFFormat.TURTLE);
-    assertThat(RDFFormat.forValue("ttl")).isEqualTo(RDFFormat.TURTLE);
-    assertThat(RDFFormat.forValue("rdfxml")).isEqualTo(RDFFormat.RDF_XML);
-    assertThat(RDFFormat.forValue("rdf/xml")).isEqualTo(RDFFormat.RDF_XML);
+  static Stream<Arguments> mediaTypeToFormat() {
+    return Stream.of(
+        Arguments.of("application/ld+json", RDFFormat.JSON_LD),
+        Arguments.of("text/turtle", RDFFormat.TURTLE),
+        Arguments.of("application/rdf+xml", RDFFormat.RDF_XML)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("aliases")
+  void forValue_alias_resolves(String alias, RDFFormat expected) {
+    assertThat(RDFFormat.forValue(alias)).isEqualTo(expected);
+  }
+
+  static Stream<Arguments> aliases() {
+    return Stream.of(
+        Arguments.of("jsonld", RDFFormat.JSON_LD),
+        Arguments.of("json-ld", RDFFormat.JSON_LD),
+        Arguments.of("turtle", RDFFormat.TURTLE),
+        Arguments.of("ttl", RDFFormat.TURTLE),
+        Arguments.of("rdfxml", RDFFormat.RDF_XML),
+        Arguments.of("rdf/xml", RDFFormat.RDF_XML)
+    );
   }
 
   @Test
@@ -41,10 +60,19 @@ class RDFFormatTest {
         .hasMessageContaining("nquads");
   }
 
-  @Test
-  void value_returnsOfficialMediaType() {
-    assertThat(RDFFormat.JSON_LD.value()).isEqualTo("application/ld+json");
-    assertThat(RDFFormat.TURTLE.value()).isEqualTo("text/turtle");
-    assertThat(RDFFormat.RDF_XML.value()).isEqualTo("application/rdf+xml");
+  @ParameterizedTest
+  @MethodSource("formatToMediatype")
+  void value_returnsOfficialMediaType(RDFFormat format, String expected) {
+    assertThat(format.value()).isEqualTo(expected);
   }
+
+  static Stream<Arguments> formatToMediatype() {
+    return Stream.of(
+        Arguments.of(RDFFormat.JSON_LD, "application/ld+json"),
+        Arguments.of(RDFFormat.TURTLE, "text/turtle"),
+        Arguments.of(RDFFormat.RDF_XML, "application/rdf+xml")
+    );
+  }
+
+
 }

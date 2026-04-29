@@ -9,8 +9,11 @@ import eu.bmdproject.dataspace.util.eea.DiscodataClient;
 import eu.bmdproject.dataspace.util.eea.SiteMetaDataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,46 +25,58 @@ import java.sql.ResultSet;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class DefaultSiteDaoMetadataDefaultTest {
 
   @TempDir
   Path tmp;
 
+  @Mock
+  Connection c;
+
+  @Mock
+  PreparedStatement ps;
+
+  @Mock
+  ResultSet rs;
+
+  @Mock
+  DiscodataClient discodataClient;
+
+  @Mock
+  DiscoDataProperties props;
+
   private Path gpkgPath;
 
   @BeforeEach
-  public void setup() throws Exception {
+  void setup() throws Exception {
     gpkgPath = tmp.resolve("test.gpkg");
     Files.createFile(gpkgPath);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
+    when(props.geopackagePath()).thenReturn(gpkgPath);
+    when(c.prepareStatement(anyString())).thenReturn(ps);
+    when(ps.executeQuery()).thenReturn(rs);
   }
 
   @Test
   void getMetadataForSite_default_happyPath() throws Exception {
-    DiscodataClient discodataClient = mock(DiscodataClient.class);
-    DiscoDataProperties props = mock(DiscoDataProperties.class);
-    when(props.geopackagePath()).thenReturn(gpkgPath);
+    // Given
     DefaultSiteDao dao = new DefaultSiteDao(discodataClient, props);
-
-    Connection c = mock(Connection.class);
-    PreparedStatement ps = mock(PreparedStatement.class);
-    ResultSet rs = mock(ResultSet.class);
-
-    when(c.prepareStatement(anyString())).thenReturn(ps);
-    when(ps.executeQuery()).thenReturn(rs);
     when(rs.next()).thenReturn(true);
-
     Site expected = mock(DefaultSite.class);
 
     try (MockedStatic<DriverManager> dm = mockStatic(DriverManager.class);
          MockedStatic<SiteMetaDataUtils> utils = mockStatic(SiteMetaDataUtils.class)) {
-
       dm.when(() -> DriverManager.getConnection(startsWith("jdbc:sqlite:"))).thenReturn(c);
       utils.when(() -> SiteMetaDataUtils.createDefaultSite(rs)).thenReturn(expected);
 
+      // When
       Site site = dao.getMetadataForSite("FI123", SiteMetadataSource.DEFAULT);
 
+      // Then
       assertSame(expected, site);
       verify(ps).setString(1, "FI123");
       utils.verify(() -> SiteMetaDataUtils.createDefaultSite(rs));
@@ -70,22 +85,14 @@ class DefaultSiteDaoMetadataDefaultTest {
 
   @Test
   void getMetadataForSite_default_notFound() throws Exception {
-    DiscodataClient discodataClient = mock(DiscodataClient.class);
-    DiscoDataProperties props = mock(DiscoDataProperties.class);
-    when(props.geopackagePath()).thenReturn(gpkgPath);
+    // Given
     DefaultSiteDao dao = new DefaultSiteDao(discodataClient, props);
-
-    Connection c = mock(Connection.class);
-    PreparedStatement ps = mock(PreparedStatement.class);
-    ResultSet rs = mock(ResultSet.class);
-
-    when(c.prepareStatement(anyString())).thenReturn(ps);
-    when(ps.executeQuery()).thenReturn(rs);
     when(rs.next()).thenReturn(false);
 
     try (MockedStatic<DriverManager> dm = mockStatic(DriverManager.class)) {
       dm.when(() -> DriverManager.getConnection(startsWith("jdbc:sqlite:"))).thenReturn(c);
 
+      // When / Then
       assertThrows(NotFoundException.class,
           () -> dao.getMetadataForSite("FI-NOPE", SiteMetadataSource.DEFAULT));
     }
